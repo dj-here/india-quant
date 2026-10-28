@@ -305,6 +305,13 @@ export default async function BookingDetailPage({
                         </button>
                       </form>
 
+                      <Link
+                        href={`/bookings/${booking.id}/updates`}
+                        className="rounded-xl border border-emerald-600 text-emerald-700 bg-emerald-50 px-4 py-2.5 text-xs font-bold hover:bg-emerald-100 flex items-center"
+                      >
+                        Daily Updates Feed
+                      </Link>
+
                       <form action={`/api/bookings/${booking.id}/transition`} method="POST">
                         <input type="hidden" name="targetStatus" value="CANCELLED_BY_OWNER" />
                         <button
@@ -323,15 +330,24 @@ export default async function BookingDetailPage({
                     <div className="rounded-xl bg-blue-50 p-3 text-xs text-blue-900 border border-blue-200">
                       Stay is actively in progress! Sitter can post daily photo/video updates or complete checkout.
                     </div>
-                    <form action={`/api/bookings/${booking.id}/transition`} method="POST">
-                      <input type="hidden" name="targetStatus" value="COMPLETED" />
-                      <button
-                        type="submit"
-                        className="rounded-xl bg-emerald-600 px-5 py-2.5 text-xs font-bold text-white shadow hover:bg-emerald-700"
+                    <div className="flex flex-wrap gap-3">
+                      <Link
+                        href={`/bookings/${booking.id}/updates`}
+                        className="rounded-xl bg-emerald-600 px-5 py-2.5 text-xs font-bold text-white shadow hover:bg-emerald-700 flex items-center"
                       >
-                        Mark Stay Completed (Checkout)
-                      </button>
-                    </form>
+                        📸 Post / View Daily Updates
+                      </Link>
+
+                      <form action={`/api/bookings/${booking.id}/transition`} method="POST">
+                        <input type="hidden" name="targetStatus" value="COMPLETED" />
+                        <button
+                          type="submit"
+                          className="rounded-xl border border-slate-300 px-5 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-100"
+                        >
+                          Mark Stay Completed (Checkout)
+                        </button>
+                      </form>
+                    </div>
                   </div>
                 )}
 

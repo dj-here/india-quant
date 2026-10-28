@@ -2,6 +2,8 @@ import pino from 'pino';
 import { Queue, Worker, Job } from 'bullmq';
 import Redis from 'ioredis';
 import { runLedgerReconciliation } from './reconciliation.js';
+import { executeDailyUpdateNudge } from './update-nudge.js';
+import { prisma } from '@pawstay/db';
 
 const logger = pino({
   name: 'pawstay-worker',
@@ -23,6 +25,7 @@ export const QUEUE_NAMES = {
   PAYOUT_RELEASE: 'pawstay:payout-release',
   REVIEW_REVEAL: 'pawstay:review-reveal',
   LEDGER_RECONCILIATION: 'pawstay:ledger-reconciliation',
+  DAILY_UPDATE_NUDGE: 'pawstay:daily-update-nudge',
   NOTIFICATIONS: 'pawstay:notifications',
 } as const;
 
@@ -80,6 +83,17 @@ export async function startWorker() {
     { connection, concurrency: 1 }
   );
 
+  // Define daily stay update nudge worker
+  const updateNudgeWorker = new Worker(
+    QUEUE_NAMES.DAILY_UPDATE_NUDGE,
+    async (job: Job) => {
+      logger.info({ jobId: job.id }, 'Processing daily stay update nudge sweep...');
+      const report = await executeDailyUpdateNudge(prisma);
+      return report;
+    },
+    { connection, concurrency: 1 }
+  );
+
   // Graceful shutdown
   const shutdown = async (signal: string) => {
     logger.info({ signal }, 'Gracefully shutting down worker processes...');
@@ -88,6 +102,7 @@ export async function startWorker() {
       payoutWorker.close(),
       reviewRevealWorker.close(),
       reconciliationWorker.close(),
+      updateNudgeWorker.close(),
       connection.quit(),
     ]);
     logger.info('All worker queues stopped. Exiting cleanly.');

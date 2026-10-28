@@ -48,6 +48,14 @@ export function Navbar({ user }: NavbarProps) {
             >
               Become a Sitter
             </Link>
+            <Link
+              href="/messages"
+              className={`text-sm font-semibold transition ${
+                pathname.startsWith('/messages') ? 'text-emerald-600' : 'text-slate-600 hover:text-emerald-600'
+              }`}
+            >
+              Messages
+            </Link>
             {isSitter && (
               <Link
                 href="/sitter/dashboard"
