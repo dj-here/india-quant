@@ -8,29 +8,29 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./src/index.ts",
-      "import": "./src/index.ts",
-      "default": "./src/index.ts"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
     },
     "./constants": {
-      "types": "./src/constants/index.ts",
-      "import": "./src/constants/index.ts",
-      "default": "./src/constants/index.ts"
+      "types": "./dist/constants/index.d.ts",
+      "import": "./dist/constants/index.js",
+      "default": "./dist/constants/index.js"
     },
     "./types": {
-      "types": "./src/types/index.ts",
-      "import": "./src/types/index.ts",
-      "default": "./src/types/index.ts"
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/types/index.js",
+      "default": "./dist/types/index.js"
     },
     "./schemas": {
-      "types": "./src/schemas/index.ts",
-      "import": "./src/schemas/index.ts",
-      "default": "./src/schemas/index.ts"
+      "types": "./dist/schemas/index.d.ts",
+      "import": "./dist/schemas/index.js",
+      "default": "./dist/schemas/index.js"
     },
     "./env": {
-      "types": "./src/env.ts",
-      "import": "./src/env.ts",
-      "default": "./src/env.ts"
+      "types": "./dist/env.d.ts",
+      "import": "./dist/env.js",
+      "default": "./dist/env.js"
     }
   },
   "scripts": {
