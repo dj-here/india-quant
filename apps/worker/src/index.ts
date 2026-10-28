@@ -1,6 +1,7 @@
 import pino from 'pino';
 import { Queue, Worker, Job } from 'bullmq';
 import Redis from 'ioredis';
+import { runLedgerReconciliation } from './reconciliation.js';
 
 const logger = pino({
   name: 'pawstay-worker',
@@ -68,6 +69,17 @@ export async function startWorker() {
     { connection, concurrency: 5 }
   );
 
+  // Define nightly ledger reconciliation worker
+  const reconciliationWorker = new Worker(
+    QUEUE_NAMES.LEDGER_RECONCILIATION,
+    async (job: Job) => {
+      logger.info({ jobId: job.id }, 'Processing nightly double-entry ledger reconciliation...');
+      const report = await runLedgerReconciliation();
+      return report;
+    },
+    { connection, concurrency: 1 }
+  );
+
   // Graceful shutdown
   const shutdown = async (signal: string) => {
     logger.info({ signal }, 'Gracefully shutting down worker processes...');
@@ -75,6 +87,7 @@ export async function startWorker() {
       expiryWorker.close(),
       payoutWorker.close(),
       reviewRevealWorker.close(),
+      reconciliationWorker.close(),
       connection.quit(),
     ]);
     logger.info('All worker queues stopped. Exiting cleanly.');

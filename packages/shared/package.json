@@ -37,6 +37,21 @@
       "import": "./dist/ranking/index.js",
       "default": "./dist/ranking/index.js"
     },
+    "./state-machine": {
+      "types": "./dist/state-machine/index.d.ts",
+      "import": "./dist/state-machine/index.js",
+      "default": "./dist/state-machine/index.js"
+    },
+    "./cancellation": {
+      "types": "./dist/cancellation/index.d.ts",
+      "import": "./dist/cancellation/index.js",
+      "default": "./dist/cancellation/index.js"
+    },
+    "./payments": {
+      "types": "./dist/payments/index.d.ts",
+      "import": "./dist/payments/index.js",
+      "default": "./dist/payments/index.js"
+    },
     "./env": {
       "types": "./dist/env.d.ts",
       "import": "./dist/env.js",
