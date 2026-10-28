@@ -35,12 +35,14 @@ function CheckoutContent() {
   const [pets, setPets] = useState<any[]>([]);
   const [selectedPetIds, setSelectedPetIds] = useState<string[]>([]);
   const [specialInstructions, setSpecialInstructions] = useState('');
-  const [vetEmergencyDollars, setVetEmergencyDollars] = useState(500);
+  const [vetEmergencyDollars, setVetEmergencyDollars] = useState(10000);
   const [isInstantBook, setIsInstantBook] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // Simulated card inputs
+  // Indian Payment options
+  const [paymentMethod, setPaymentMethod] = useState<'UPI' | 'CARD' | 'NETBANKING'>('UPI');
+  const [upiId, setUpiId] = useState('petparent@okhdfcbank');
   const [cardNumber, setCardNumber] = useState('•••• •••• •••• 4242');
   const [cardExpiry, setCardExpiry] = useState('12/28');
   const [cardCvc, setCardCvc] = useState('987');
@@ -231,21 +233,21 @@ function CheckoutContent() {
 
                 <div className="max-w-xs">
                   <label className="block text-xs font-bold uppercase text-slate-600 mb-1">
-                    Emergency Spending Limit ($ USD)
+                    Emergency Spending Limit (₹ INR)
                   </label>
                   <div className="relative">
-                    <span className="absolute left-3 top-2.5 text-sm text-slate-400 font-bold">$</span>
+                    <span className="absolute left-3 top-2.5 text-sm text-slate-400 font-bold">₹</span>
                     <input
                       type="number"
-                      min={100}
-                      max={5000}
-                      step={50}
+                      min={1000}
+                      max={50000}
+                      step={500}
                       value={vetEmergencyDollars}
                       onChange={(e) => setVetEmergencyDollars(Number(e.target.value))}
                       className="w-full rounded-lg border border-slate-300 pl-7 p-2 text-sm font-bold text-slate-900 focus:outline-none focus:border-emerald-500"
                     />
                   </div>
-                  <p className="text-[11px] text-slate-400 mt-1">Minimum required: $100.00. Most owners set $500.</p>
+                  <p className="text-[11px] text-slate-400 mt-1">Recommended: ₹5,000 - ₹10,000 for emergency clinic visits.</p>
                 </div>
 
                 <div>
@@ -256,61 +258,121 @@ function CheckoutContent() {
                     rows={2}
                     value={specialInstructions}
                     onChange={(e) => setSpecialInstructions(e.target.value)}
-                    placeholder="e.g. Charlie loves sleeping with his blue blanket, gets evening walk at 6pm..."
+                    placeholder="e.g. Charlie loves playing fetch in the evening, gets feeding at 8am and 7pm..."
                     className="w-full rounded-lg border border-slate-300 p-2 text-xs focus:outline-none focus:border-emerald-500"
                   />
                 </div>
               </div>
 
-              {/* Payment Method / Card Form */}
+              {/* Payment Method Form */}
               <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                   <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                    <CreditCard className="h-4 w-4 text-emerald-600" /> Payment Method
+                    <CreditCard className="h-4 w-4 text-emerald-600" /> Payment Method (India)
                   </h2>
                   <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-500">
-                    <Lock className="h-3 w-3 text-emerald-600" /> 256-Bit SSL Encrypted
+                    <Lock className="h-3 w-3 text-emerald-600" /> Razorpay Secured 256-Bit SSL
                   </span>
                 </div>
 
-                <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-3">
-                  <div>
+                {/* Payment Tabs: UPI / Card / NetBanking */}
+                <div className="grid grid-cols-3 gap-2 p-1 bg-slate-100 rounded-xl text-xs font-bold text-slate-600">
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod('UPI')}
+                    className={`py-2 rounded-lg transition ${paymentMethod === 'UPI' ? 'bg-white text-emerald-700 shadow-sm' : 'hover:text-slate-900'}`}
+                  >
+                    UPI (GPay / PhonePe)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod('CARD')}
+                    className={`py-2 rounded-lg transition ${paymentMethod === 'CARD' ? 'bg-white text-emerald-700 shadow-sm' : 'hover:text-slate-900'}`}
+                  >
+                    Card (RuPay / Visa)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod('NETBANKING')}
+                    className={`py-2 rounded-lg transition ${paymentMethod === 'NETBANKING' ? 'bg-white text-emerald-700 shadow-sm' : 'hover:text-slate-900'}`}
+                  >
+                    Net Banking
+                  </button>
+                </div>
+
+                {paymentMethod === 'UPI' && (
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-3">
                     <label className="block text-xs font-bold uppercase text-slate-600 mb-1">
-                      Card Number
+                      UPI ID / VPA
                     </label>
                     <input
                       type="text"
-                      disabled
-                      value={cardNumber}
-                      className="w-full rounded-lg border border-slate-300 bg-white p-2.5 text-sm font-mono text-slate-800"
+                      value={upiId}
+                      onChange={(e) => setUpiId(e.target.value)}
+                      placeholder="e.g. yourname@okhdfcbank or 9876543210@paytm"
+                      className="w-full rounded-lg border border-slate-300 bg-white p-2.5 text-sm font-medium text-slate-800 focus:outline-none focus:border-emerald-500"
                     />
+                    <p className="text-[11px] text-slate-500">
+                      ⚡ Instant mandate authorization via Google Pay, PhonePe, Paytm, or BHIM UPI.
+                    </p>
                   </div>
+                )}
 
-                  <div className="grid grid-cols-2 gap-3">
+                {paymentMethod === 'CARD' && (
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-3">
                     <div>
                       <label className="block text-xs font-bold uppercase text-slate-600 mb-1">
-                        Expires
+                        Card Number (RuPay, Visa, Mastercard)
                       </label>
                       <input
                         type="text"
                         disabled
-                        value={cardExpiry}
+                        value={cardNumber}
                         className="w-full rounded-lg border border-slate-300 bg-white p-2.5 text-sm font-mono text-slate-800"
                       />
                     </div>
-                    <div>
-                      <label className="block text-xs font-bold uppercase text-slate-600 mb-1">
-                        CVC / CVV
-                      </label>
-                      <input
-                        type="text"
-                        disabled
-                        value={cardCvc}
-                        className="w-full rounded-lg border border-slate-300 bg-white p-2.5 text-sm font-mono text-slate-800"
-                      />
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-bold uppercase text-slate-600 mb-1">
+                          Expires
+                        </label>
+                        <input
+                          type="text"
+                          disabled
+                          value={cardExpiry}
+                          className="w-full rounded-lg border border-slate-300 bg-white p-2.5 text-sm font-mono text-slate-800"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold uppercase text-slate-600 mb-1">
+                          CVC / CVV
+                        </label>
+                        <input
+                          type="text"
+                          disabled
+                          value={cardCvc}
+                          className="w-full rounded-lg border border-slate-300 bg-white p-2.5 text-sm font-mono text-slate-800"
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
+
+                {paymentMethod === 'NETBANKING' && (
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-2">
+                    <label className="block text-xs font-bold uppercase text-slate-600 mb-1">
+                      Select Your Bank
+                    </label>
+                    <select className="w-full rounded-lg border border-slate-300 bg-white p-2.5 text-sm font-medium text-slate-800 focus:outline-none focus:border-emerald-500">
+                      <option>HDFC Bank</option>
+                      <option>State Bank of India (SBI)</option>
+                      <option>ICICI Bank</option>
+                      <option>Axis Bank</option>
+                      <option>Kotak Mahindra Bank</option>
+                    </select>
+                  </div>
+                )}
 
                 <div className="rounded-xl bg-emerald-50 p-3 text-xs text-emerald-900 border border-emerald-100 flex items-start gap-2.5">
                   <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />

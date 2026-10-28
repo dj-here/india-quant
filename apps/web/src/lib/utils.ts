@@ -5,9 +5,18 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatCentsToDollars(cents: number): string {
-  return (cents / 100).toLocaleString('en-US', {
+export function formatMinorUnitsToDisplay(minor: number, currency: string = 'INR'): string {
+  const amount = (minor || 0) / 100;
+  if (currency === 'INR') {
+    return Number.isInteger(amount)
+      ? `₹${amount.toLocaleString('en-IN')}`
+      : `₹${amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  }
+  return amount.toLocaleString('en-US', {
     style: 'currency',
-    currency: 'USD',
+    currency,
   });
 }
+
+// Keep formatCentsToDollars as alias to formatMinorUnitsToDisplay for backwards compatibility
+export const formatCentsToDollars = (minor: number) => formatMinorUnitsToDisplay(minor, 'INR');

@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   MockPaymentProvider,
+  RazorpayPaymentProvider,
   buildAuthorizationLedgerEntries,
   buildPayoutLedgerEntries,
   buildRefundLedgerEntries,
@@ -9,6 +10,42 @@ import {
 
 describe('Payment Provider & Double-Entry Ledger Engine', () => {
   const provider = new MockPaymentProvider();
+  const razorpay = new RazorpayPaymentProvider();
+
+  describe('RazorpayPaymentProvider (Indian Market)', () => {
+    it('creates Razorpay orders in INR with paise minor units', async () => {
+      const order = await razorpay.createPaymentIntent({
+        amountMinor: 120000, // ₹1,200.00
+        currency: 'INR',
+        idempotencyKey: 'idem_rzp_order_1',
+      });
+
+      expect(order.providerIntentId).toMatch(/^order_/);
+      expect(order.currency).toBe('INR');
+      expect(order.amountMinor).toBe(120000);
+      expect(order.status).toBe('REQUIRES_CAPTURE');
+    });
+
+    it('processes Indian payouts and refunds via Razorpay', async () => {
+      const payout = await razorpay.releasePayout({
+        destinationAccountId: 'acc_rzp_sitter_1',
+        amountMinor: 95000,
+        currency: 'INR',
+        bookingId: 'book_rzp_1',
+        idempotencyKey: 'idem_rzp_pout_1',
+      });
+      expect(payout.status).toBe('PAID');
+      expect(payout.amountMinor).toBe(95000);
+
+      const refund = await razorpay.refundPayment({
+        paymentIntentId: 'order_123',
+        amountMinor: 120000,
+        idempotencyKey: 'idem_rzp_ref_1',
+      });
+      expect(refund.status).toBe('SUCCEEDED');
+      expect(refund.amountMinor).toBe(120000);
+    });
+  });
 
   describe('MockPaymentProvider', () => {
     it('creates idempotent payment intents with client secrets', async () => {

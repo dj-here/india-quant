@@ -4,7 +4,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = process.env.NEXTAUTH_URL || 'https://pawstay.com';
 
   const services = ['boarding', 'house-sitting', 'drop-in', 'day-care', 'walking'];
-  const cities = ['austin', 'seattle', 'san-francisco', 'new-york', 'denver'];
+  const cities = ['bengaluru', 'mumbai', 'delhi-ncr', 'pune', 'hyderabad', 'austin', 'seattle'];
 
   const landingUrls: MetadataRoute.Sitemap = [];
 

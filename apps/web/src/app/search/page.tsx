@@ -26,9 +26,9 @@ function SearchContent() {
   const searchParams = useSearchParams();
 
   // Search parameters
-  const [city, setCity] = useState(searchParams.get('city') || 'Austin, TX');
-  const [latitude, setLatitude] = useState(searchParams.get('lat') || '30.2672');
-  const [longitude, setLongitude] = useState(searchParams.get('lng') || '-97.7431');
+  const [city, setCity] = useState(searchParams.get('city') || 'Bengaluru, KA');
+  const [latitude, setLatitude] = useState(searchParams.get('lat') || '12.9716');
+  const [longitude, setLongitude] = useState(searchParams.get('lng') || '77.5946');
   const [serviceType, setServiceType] = useState(searchParams.get('serviceType') || 'BOARDING');
   const [startDate, setStartDate] = useState(
     searchParams.get('startDate') || new Date().toISOString().split('T')[0]
@@ -53,11 +53,12 @@ function SearchContent() {
 
   // Quick metro presets
   const METROS = [
+    { name: 'Bengaluru, KA', lat: 12.9716, lng: 77.5946 },
+    { name: 'Mumbai, MH', lat: 19.0760, lng: 72.8777 },
+    { name: 'Delhi-NCR', lat: 28.6139, lng: 77.2090 },
+    { name: 'Pune, MH', lat: 18.5204, lng: 73.8567 },
+    { name: 'Hyderabad, TS', lat: 17.3850, lng: 78.4867 },
     { name: 'Austin, TX', lat: 30.2672, lng: -97.7431 },
-    { name: 'Seattle, WA', lat: 47.6062, lng: -122.3321 },
-    { name: 'San Francisco, CA', lat: 37.7749, lng: -122.4194 },
-    { name: 'New York, NY', lat: 40.7128, lng: -74.006 },
-    { name: 'Denver, CO', lat: 39.7392, lng: -104.9903 },
   ];
 
   const fetchSearchResults = async () => {

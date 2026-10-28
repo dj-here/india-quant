@@ -1,4 +1,5 @@
 import {
+  DEFAULT_CURRENCY,
   DEFAULT_OWNER_SERVICE_FEE_BPS,
   DEFAULT_SITTER_COMMISSION_BPS,
 } from '../constants/index.js';
@@ -16,6 +17,7 @@ export interface PricingInput {
   extendedStayThresholdUnits?: number; // default 7 units
   ownerFeeBps?: number; // default 700 bps (7%)
   sitterCommissionBps?: number; // default 1200 bps (12%)
+  currency?: string;
   coupon?: {
     discountPercent?: number;
     fixedDiscountMinor?: number;
@@ -67,12 +69,15 @@ export function calculateBookingPrice(input: PricingInput): PriceBreakdown {
   const unitsCount = Math.floor(input.unitsCount);
   const petCount = Math.floor(input.petCount);
 
+  const currency = input.currency || DEFAULT_CURRENCY;
+  const sym = currency === 'INR' ? '₹' : '$';
+
   // 1. Base amount for the primary pet
   const baseAmountMinor = baseRateMinor * unitsCount;
   const lineItems: PricingLineItem[] = [
     {
       code: 'BASE_RATE',
-      label: `Base rate ($${(baseRateMinor / 100).toFixed(2)} × ${unitsCount} unit${unitsCount > 1 ? 's' : ''})`,
+      label: `Base rate (${sym}${(baseRateMinor / 100).toFixed(0)} × ${unitsCount} unit${unitsCount > 1 ? 's' : ''})`,
       amountMinor: baseAmountMinor,
     },
   ];
@@ -84,7 +89,7 @@ export function calculateBookingPrice(input: PricingInput): PriceBreakdown {
     additionalPetsMinor = Math.round(input.additionalPetRateMinor * extraPets * unitsCount);
     lineItems.push({
       code: 'ADDITIONAL_PETS',
-      label: `Additional pet surcharge (${extraPets} pet${extraPets > 1 ? 's' : ''} × $${(input.additionalPetRateMinor / 100).toFixed(2)})`,
+      label: `Additional pet surcharge (${extraPets} pet${extraPets > 1 ? 's' : ''} × ${sym}${(input.additionalPetRateMinor / 100).toFixed(0)})`,
       amountMinor: additionalPetsMinor,
     });
   }
@@ -107,7 +112,7 @@ export function calculateBookingPrice(input: PricingInput): PriceBreakdown {
     puppySurchargeMinor = Math.round(input.puppySurchargeMinor * unitsCount);
     lineItems.push({
       code: 'PUPPY_SURCHARGE',
-      label: `Puppy high-attention surcharge ($${(input.puppySurchargeMinor / 100).toFixed(2)}/day)`,
+      label: `Puppy high-attention surcharge (${sym}${(input.puppySurchargeMinor / 100).toFixed(0)}/day)`,
       amountMinor: puppySurchargeMinor,
     });
   }
@@ -193,7 +198,7 @@ export function calculateBookingPrice(input: PricingInput): PriceBreakdown {
     ownerTotalMinor,
     sitterCommissionMinor,
     sitterNetPayoutMinor,
-    currency: 'USD',
+    currency,
     lineItems,
   };
 }

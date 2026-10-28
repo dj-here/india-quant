@@ -89,7 +89,7 @@ export async function GET() {
         : 4.9;
 
     // 4. Supply vs Demand by Target Metro
-    const targetMetros = ['Austin', 'Seattle', 'San Francisco', 'New York', 'Denver'];
+    const targetMetros = ['Bengaluru', 'Mumbai', 'Delhi-NCR', 'Pune', 'Hyderabad', 'Austin'];
     const metroStats = targetMetros.map((city) => {
       const supplyCount = approvedSitters.filter(
         (s) => s.city?.toLowerCase() === city.toLowerCase()

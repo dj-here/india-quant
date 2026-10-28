@@ -190,11 +190,13 @@ export default function AdminSettingsPage() {
 
           <div className="space-y-3">
             {[
+              'KENNEL_BENCHMARK_BENGALURU',
+              'KENNEL_BENCHMARK_MUMBAI',
+              'KENNEL_BENCHMARK_DELHI_NCR',
+              'KENNEL_BENCHMARK_PUNE',
+              'KENNEL_BENCHMARK_HYDERABAD',
               'KENNEL_BENCHMARK_AUSTIN',
               'KENNEL_BENCHMARK_SEATTLE',
-              'KENNEL_BENCHMARK_SF',
-              'KENNEL_BENCHMARK_NYC',
-              'KENNEL_BENCHMARK_DENVER',
             ].map((key) => {
               const setting = settings.find((s) => s.key === key);
               const isSaving = savingKey === key;

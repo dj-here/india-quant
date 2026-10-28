@@ -31,11 +31,14 @@ export default function RootLayout({
             </div>
 
             <div className="flex flex-wrap items-center justify-center gap-6 font-medium">
-              <Link href="/services/boarding/austin" className="hover:text-emerald-600">
-                Austin Dog Boarding
+              <Link href="/services/boarding/bengaluru" className="hover:text-emerald-600">
+                Bengaluru Dog Boarding
               </Link>
-              <Link href="/services/boarding/seattle" className="hover:text-emerald-600">
-                Seattle Dog Boarding
+              <Link href="/services/boarding/mumbai" className="hover:text-emerald-600">
+                Mumbai Pet Sitting
+              </Link>
+              <Link href="/services/boarding/delhi-ncr" className="hover:text-emerald-600">
+                Delhi-NCR Pet Care
               </Link>
               <Link href="/safety" className="hover:text-emerald-600">
                 PawStay Guarantee

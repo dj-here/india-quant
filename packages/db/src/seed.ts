@@ -4,6 +4,11 @@ import bcrypt from 'bcryptjs';
 const prisma = new PrismaClient();
 
 const CITIES = [
+  { city: 'Bengaluru', state: 'KA', postalCode: '560001', lat: 12.9716, lng: 77.5946, benchmark: 100000 },
+  { city: 'Mumbai', state: 'MH', postalCode: '400001', lat: 19.0760, lng: 72.8777, benchmark: 120000 },
+  { city: 'Delhi-NCR', state: 'DL', postalCode: '110001', lat: 28.6139, lng: 77.2090, benchmark: 100000 },
+  { city: 'Pune', state: 'MH', postalCode: '411001', lat: 18.5204, lng: 73.8567, benchmark: 80000 },
+  { city: 'Hyderabad', state: 'TS', postalCode: '500001', lat: 17.3850, lng: 78.4867, benchmark: 90000 },
   { city: 'Austin', state: 'TX', postalCode: '78701', lat: 30.2672, lng: -97.7431, benchmark: 6500 },
   { city: 'Seattle', state: 'WA', postalCode: '98101', lat: 47.6062, lng: -122.3321, benchmark: 7500 },
   { city: 'San Francisco', state: 'CA', postalCode: '94102', lat: 37.7749, lng: -122.4194, benchmark: 8500 },
@@ -12,28 +17,23 @@ const CITIES = [
 ];
 
 const DOG_BREEDS = [
-  'Golden Retriever', 'French Bulldog', 'German Shepherd', 'Labrador Retriever',
-  'Poodle', 'Beagle', 'Australian Shepherd', 'Pembroke Welsh Corgi', 'Dachshund',
-  'Boxer', 'Siberian Husky', 'Border Collie', 'Bernese Mountain Dog', 'Shih Tzu'
+  'Indian Pariah Dog / Desi', 'Golden Retriever', 'Labrador Retriever', 'German Shepherd',
+  'Beagle', 'Shih Tzu', 'Pomeranian', 'Pug', 'Rottweiler', 'Cocker Spaniel', 'Siberian Husky'
 ];
 
 const CAT_BREEDS = [
-  'Domestic Shorthair', 'Siamese', 'Maine Coon', 'Ragdoll', 'Persian', 'British Shorthair', 'Bengal'
+  'Indie Cat', 'Persian', 'Siamese', 'Maine Coon', 'Ragdoll', 'British Shorthair', 'Bengal'
 ];
 
 const FIRST_NAMES = [
-  'Sarah', 'Michael', 'Emily', 'David', 'Jessica', 'James', 'Amanda', 'Robert',
-  'Ashley', 'John', 'Jennifer', 'William', 'Elizabeth', 'Brian', 'Megan', 'Christopher',
-  'Lauren', 'Matthew', 'Stephanie', 'Daniel', 'Nicole', 'Anthony', 'Rachel', 'Mark',
-  'Heather', 'Paul', 'Samantha', 'Steven', 'Katherine', 'Andrew', 'Christine', 'Joshua',
-  'Melissa', 'Kevin', 'Rebecca', 'Thomas', 'Victoria', 'Justin', 'Hannah', 'Scott',
-  'Olivia', 'Taylor', 'Brandon', 'Emma', 'Ryan', 'Abigail', 'Tyler', 'Sophia', 'Alexander', 'Chloe'
+  'Aarav', 'Priya', 'Rohan', 'Ananya', 'Vikram', 'Neha', 'Aditya', 'Sneha',
+  'Karan', 'Pooja', 'Rahul', 'Divya', 'Arjun', 'Meera', 'Varun', 'Kavya',
+  'Sarah', 'Michael', 'Emily', 'David', 'Jessica', 'James', 'Amanda', 'Robert'
 ];
 
 const LAST_NAMES = [
-  'Miller', 'Johnson', 'Smith', 'Williams', 'Brown', 'Jones', 'Garcia', 'Davis',
-  'Rodriguez', 'Martinez', 'Hernandez', 'Lopez', 'Gonzalez', 'Wilson', 'Anderson',
-  'Thomas', 'Taylor', 'Moore', 'Jackson', 'Martin', 'Lee', 'Perez', 'Thompson', 'White'
+  'Sharma', 'Patel', 'Verma', 'Reddy', 'Iyer', 'Joshi', 'Gupta', 'Singh',
+  'Nair', 'Kulkarni', 'Deshmukh', 'Chatterjee', 'Banerjee', 'Rao'
 ];
 
 const PET_NAMES = [
@@ -413,7 +413,7 @@ export async function runSeed() {
           providerPaymentId: `pi_mock_${booking.id}`,
           clientSecret: `pi_mock_secret_${booking.id}`,
           amountMinor: ownerTotalMinor,
-          currency: 'USD',
+          currency: 'INR',
           status: 'SUCCEEDED',
           idempotencyKey: `idem_pi_${booking.id}`,
         },
@@ -425,7 +425,7 @@ export async function runSeed() {
           paymentIntentId: pi.id,
           providerChargeId: `ch_mock_${booking.id}`,
           amountMinor: ownerTotalMinor,
-          currency: 'USD',
+          currency: 'INR',
           feeMinor: 480, // Stripe processing fee approx
         },
       });
@@ -440,7 +440,7 @@ export async function runSeed() {
           debitAccount: 'STRIPE_CLEARING',
           creditAccount: 'ESCROW_HOLD',
           amountMinor: ownerTotalMinor,
-          currency: 'USD',
+          currency: 'INR',
           idempotencyKey: `ledger_charge_${booking.id}`,
           description: `Authorized charge hold for booking ${booking.bookingNumber}`,
         },
@@ -453,7 +453,7 @@ export async function runSeed() {
           debitAccount: 'ESCROW_HOLD',
           creditAccount: 'PLATFORM_REVENUE',
           amountMinor: ownerServiceFeeMinor,
-          currency: 'USD',
+          currency: 'INR',
           idempotencyKey: `ledger_owner_fee_${booking.id}`,
           description: `Platform 7% service fee revenue for booking ${booking.bookingNumber}`,
         },
@@ -466,7 +466,7 @@ export async function runSeed() {
           debitAccount: 'ESCROW_HOLD',
           creditAccount: 'SITTER_PAYABLE',
           amountMinor: sitterNetPayoutMinor,
-          currency: 'USD',
+          currency: 'INR',
           idempotencyKey: `ledger_sitter_payable_${booking.id}`,
           description: `Sitter payable after 12% commission for booking ${booking.bookingNumber}`,
         },
@@ -480,7 +480,7 @@ export async function runSeed() {
             sitterId: sitter.id,
             providerPayoutId: `tr_mock_${booking.id}`,
             amountMinor: sitterNetPayoutMinor,
-            currency: 'USD',
+            currency: 'INR',
             status: 'PAID',
             scheduledReleaseAt: new Date(Date.now() - 3600000),
             releasedAt: new Date(),
@@ -495,7 +495,7 @@ export async function runSeed() {
             debitAccount: 'SITTER_PAYABLE',
             creditAccount: 'STRIPE_TRANSFER_OUT',
             amountMinor: sitterNetPayoutMinor,
-            currency: 'USD',
+            currency: 'INR',
             idempotencyKey: `ledger_payout_${booking.id}`,
             description: `Transferred payout to sitter Stripe Connect account for ${booking.bookingNumber}`,
           },
@@ -509,7 +509,7 @@ export async function runSeed() {
             bookingId: booking.id,
             providerRefundId: `re_mock_${booking.id}`,
             amountMinor: ownerTotalMinor,
-            currency: 'USD',
+            currency: 'INR',
             reason: 'Requested by owner within cancellation window',
             idempotencyKey: `idem_refund_${booking.id}`,
           },
@@ -522,7 +522,7 @@ export async function runSeed() {
             debitAccount: 'ESCROW_HOLD',
             creditAccount: 'STRIPE_REFUND_OUT',
             amountMinor: ownerTotalMinor,
-            currency: 'USD',
+            currency: 'INR',
             idempotencyKey: `ledger_refund_${booking.id}`,
             description: `Refunded full booking charge to owner for ${booking.bookingNumber}`,
           },

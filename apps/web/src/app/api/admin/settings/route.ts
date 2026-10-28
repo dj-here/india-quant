@@ -14,6 +14,26 @@ const DEFAULT_SETTINGS: Record<string, { value: string; description: string }> =
     value: '1200',
     description: 'Sitter platform take-rate in basis points (1200 bps = 12%)',
   },
+  KENNEL_BENCHMARK_BENGALURU: {
+    value: '100000',
+    description: 'Typical kennel benchmark cost per night in Bengaluru (₹1,000)',
+  },
+  KENNEL_BENCHMARK_MUMBAI: {
+    value: '120000',
+    description: 'Typical kennel benchmark cost per night in Mumbai (₹1,200)',
+  },
+  KENNEL_BENCHMARK_DELHI_NCR: {
+    value: '100000',
+    description: 'Typical kennel benchmark cost per night in Delhi-NCR (₹1,000)',
+  },
+  KENNEL_BENCHMARK_PUNE: {
+    value: '80000',
+    description: 'Typical kennel benchmark cost per night in Pune (₹800)',
+  },
+  KENNEL_BENCHMARK_HYDERABAD: {
+    value: '90000',
+    description: 'Typical kennel benchmark cost per night in Hyderabad (₹900)',
+  },
   KENNEL_BENCHMARK_AUSTIN: {
     value: '7500',
     description: 'Typical kennel benchmark cost per night in Austin ($75.00)',

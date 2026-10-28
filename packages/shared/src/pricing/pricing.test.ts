@@ -40,7 +40,7 @@ describe('Pricing Engine: calculateBookingPrice', () => {
     expect(quote.ownerTotalMinor).toBe(16050);
     expect(quote.sitterCommissionMinor).toBe(1800);
     expect(quote.sitterNetPayoutMinor).toBe(13200);
-    expect(quote.currency).toBe('USD');
+    expect(quote.currency).toBe('INR');
   });
 
   it('correctly calculates additional pets surcharge', () => {

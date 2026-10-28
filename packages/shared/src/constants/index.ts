@@ -3,7 +3,7 @@
  */
 
 export const BRAND_NAME = 'PawStay';
-export const DEFAULT_CURRENCY = 'USD';
+export const DEFAULT_CURRENCY = 'INR';
 
 // Platform fees stored in Basis Points (100 bps = 1.00%)
 export const DEFAULT_OWNER_SERVICE_FEE_BPS = 700; // 7.00%

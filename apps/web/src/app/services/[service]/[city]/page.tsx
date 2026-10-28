@@ -44,6 +44,11 @@ const SERVICE_META: Record<string, { label: string; dbType: string; description:
 };
 
 const CITY_META: Record<string, { name: string; state: string; kennelBenchmarkDollars: number }> = {
+  bengaluru: { name: 'Bengaluru', state: 'KA', kennelBenchmarkDollars: 1000 },
+  mumbai: { name: 'Mumbai', state: 'MH', kennelBenchmarkDollars: 1200 },
+  'delhi-ncr': { name: 'Delhi-NCR', state: 'DL', kennelBenchmarkDollars: 1000 },
+  pune: { name: 'Pune', state: 'MH', kennelBenchmarkDollars: 800 },
+  hyderabad: { name: 'Hyderabad', state: 'TS', kennelBenchmarkDollars: 900 },
   austin: { name: 'Austin', state: 'TX', kennelBenchmarkDollars: 75 },
   seattle: { name: 'Seattle', state: 'WA', kennelBenchmarkDollars: 85 },
   'san-francisco': { name: 'San Francisco', state: 'CA', kennelBenchmarkDollars: 95 },

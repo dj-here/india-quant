@@ -10,7 +10,7 @@ export interface IdentityVerificationSession {
 
 export interface IdentityVerificationResult {
   status: 'VERIFIED' | 'FAILED' | 'PENDING';
-  documentType?: 'PASSPORT' | 'DRIVERS_LICENSE' | 'STATE_ID';
+  documentType?: 'PASSPORT' | 'DRIVERS_LICENSE' | 'STATE_ID' | 'AADHAAR' | 'PAN_CARD';
   documentFrontUrl?: string;
   selfieUrl?: string;
   details?: string;
@@ -124,12 +124,22 @@ export class MockBackgroundCheckAdapter implements BackgroundCheckAdapter {
 // Deterministic Geo Provider
 // -----------------------------------------------------------------------------
 export class MockGeoProvider implements GeoProvider {
-  private static KNOWN_CITIES: Record<string, { lat: number; lng: number; city: string; state: string; postalCode: string }> = {
-    austin: { lat: 30.2672, lng: -97.7431, city: 'Austin', state: 'TX', postalCode: '78701' },
-    seattle: { lat: 47.6062, lng: -122.3321, city: 'Seattle', state: 'WA', postalCode: '98101' },
-    'san francisco': { lat: 37.7749, lng: -122.4194, city: 'San Francisco', state: 'CA', postalCode: '94102' },
-    'new york': { lat: 40.7128, lng: -74.0060, city: 'New York', state: 'NY', postalCode: '10001' },
-    denver: { lat: 39.7392, lng: -104.9903, city: 'Denver', state: 'CO', postalCode: '80202' },
+  private static KNOWN_CITIES: Record<string, { lat: number; lng: number; city: string; state: string; postalCode: string; country: string }> = {
+    bengaluru: { lat: 12.9716, lng: 77.5946, city: 'Bengaluru', state: 'KA', postalCode: '560001', country: 'India' },
+    bangalore: { lat: 12.9716, lng: 77.5946, city: 'Bengaluru', state: 'KA', postalCode: '560001', country: 'India' },
+    mumbai: { lat: 19.0760, lng: 72.8777, city: 'Mumbai', state: 'MH', postalCode: '400001', country: 'India' },
+    delhi: { lat: 28.6139, lng: 77.2090, city: 'Delhi-NCR', state: 'DL', postalCode: '110001', country: 'India' },
+    gurgaon: { lat: 28.4595, lng: 77.0266, city: 'Gurgaon', state: 'HR', postalCode: '122001', country: 'India' },
+    noida: { lat: 28.5355, lng: 77.3910, city: 'Noida', state: 'UP', postalCode: '201301', country: 'India' },
+    pune: { lat: 18.5204, lng: 73.8567, city: 'Pune', state: 'MH', postalCode: '411001', country: 'India' },
+    hyderabad: { lat: 17.3850, lng: 78.4867, city: 'Hyderabad', state: 'TS', postalCode: '500001', country: 'India' },
+    chennai: { lat: 13.0827, lng: 80.2707, city: 'Chennai', state: 'TN', postalCode: '600001', country: 'India' },
+    kolkata: { lat: 22.5726, lng: 88.3639, city: 'Kolkata', state: 'WB', postalCode: '700001', country: 'India' },
+    austin: { lat: 30.2672, lng: -97.7431, city: 'Austin', state: 'TX', postalCode: '78701', country: 'USA' },
+    seattle: { lat: 47.6062, lng: -122.3321, city: 'Seattle', state: 'WA', postalCode: '98101', country: 'USA' },
+    'san francisco': { lat: 37.7749, lng: -122.4194, city: 'San Francisco', state: 'CA', postalCode: '94102', country: 'USA' },
+    'new york': { lat: 40.7128, lng: -74.0060, city: 'New York', state: 'NY', postalCode: '10001', country: 'USA' },
+    denver: { lat: 39.7392, lng: -104.9903, city: 'Denver', state: 'CO', postalCode: '80202', country: 'USA' },
   };
 
   async geocode(address: string): Promise<GeocodedAddress> {
@@ -142,21 +152,21 @@ export class MockGeoProvider implements GeoProvider {
           city: val.city,
           state: val.state,
           postalCode: val.postalCode,
-          country: 'USA',
-          formattedAddress: `${address.trim()}, ${val.city}, ${val.state} ${val.postalCode}`,
+          country: val.country,
+          formattedAddress: `${address.trim()}, ${val.city}, ${val.state} ${val.postalCode}, ${val.country}`,
         };
       }
     }
 
-    // Default fallback to Austin TX coordinates
+    // Default fallback to Bengaluru coordinates
     return {
-      latitude: 30.2672,
-      longitude: -97.7431,
-      city: 'Austin',
-      state: 'TX',
-      postalCode: '78701',
-      country: 'USA',
-      formattedAddress: address.trim() || 'Austin, TX 78701',
+      latitude: 12.9716,
+      longitude: 77.5946,
+      city: 'Bengaluru',
+      state: 'KA',
+      postalCode: '560001',
+      country: 'India',
+      formattedAddress: address.trim() || 'Bengaluru, Karnataka, 560001, India',
     };
   }
 

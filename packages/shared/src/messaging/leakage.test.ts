@@ -120,5 +120,42 @@ describe('Contact Leakage Mitigation Engine', () => {
         expect(result.maskedText).toContain(PAYMENT_MASK_REPLACEMENT);
       }
     });
+
+    it('detects Indian payment methods: UPI, GPay, PhonePe, Paytm', () => {
+      const inputs = [
+        'Pay me via upi directly',
+        'Send it to my gpay at 9876543210',
+        'You can phonepe me the amount',
+        'Do you accept paytm or bhim upi?',
+        'Transfer to rahul@okhdfcbank directly',
+        'Send to priya@ybl or ananya@paytm',
+        'My vpa is sitter@upi',
+      ];
+
+      for (const input of inputs) {
+        const result = maskContactInfo(input);
+        expect(result.hasLeakage).toBe(true);
+        expect(result.maskedText).toContain(PAYMENT_MASK_REPLACEMENT);
+      }
+    });
+  });
+
+  describe('Indian mobile number detection', () => {
+    it('detects 10-digit Indian mobile numbers and +91 formats', () => {
+      const inputs = [
+        'Call me at +91 98765 43210 for quick meetup',
+        'My number is +91-9876543210',
+        'Ping me on 9876543210',
+        'You can reach me at 8882143210 anytime',
+        'WhatsApp me on 7890123456',
+      ];
+
+      for (const input of inputs) {
+        const result = maskContactInfo(input);
+        expect(result.hasLeakage).toBe(true);
+        expect(result.maskedText).toContain(MASK_REPLACEMENT);
+        expect(result.detectedPatterns.some(p => p.startsWith('phone'))).toBe(true);
+      }
+    });
   });
 });

@@ -31,6 +31,13 @@ const PHONE_REGEX = /(?:\+?(\d{1,3}))?[-.\s]?(?:\(?(\d{3})\)?)[-.\s]?(\d{3})[-.\
 // Spaced out 10-digit numbers: e.g. "8 3 2 5 5 5 1 2 3 4"
 const SPACED_DIGITS_REGEX = /\b(?:\d[\s\-_.]){9,11}\d\b/g;
 
+// Indian mobile numbers (10 digits starting with 6-9, with optional +91 or 0 prefix)
+// Matches: +91 98765 43210, +91-9876543210, 09876543210, 9876543210, 98765-43210, 98765 43210
+const INDIAN_PHONE_REGEX = /(?:\+?91[\s.-]?|0)?[6-9]\d{2}[\s.-]?\d{3}[\s.-]?\d{4}\b|(?:\+?91[\s.-]?|0)?[6-9]\d{4}[\s.-]?\d{5}\b/g;
+
+// UPI VPA addresses: e.g. user@okhdfcbank, user@okaxis, user@ybl, user@paytm, user@upi
+const UPI_ID_REGEX = /\b[a-zA-Z0-9.\-_]{2,64}@(okhdfcbank|okaxis|oksbi|okicici|paytm|ybl|ibl|axl|upi|kotak|federal|barodampay|idfcbank)\b/gi;
+
 // Spelled-out numbers (common evasion technique, e.g. "five five five one two three four")
 const NUMBER_WORDS: Record<string, string> = {
   zero: '0',
@@ -58,9 +65,9 @@ const SOCIAL_HANDLE_PREFIX_REGEX = /(?:(?:ig|insta|instagram|snap|snapchat|teleg
 const DIRECT_MESSENGER_LINKS_REGEX = /\b(?:wa\.me|t\.me|instagram\.com|facebook\.com|snapchat\.com|tiktok\.com|discord\.gg|twitter\.com)\/[A-Za-z0-9_.-]+/gi;
 
 // Off-platform payment requests:
-// e.g. venmo me, zelle me, cashapp me, paypal me, pay me offline, cash is fine
-const OFF_PLATFORM_PAYMENT_REGEX = /\b(?:venmo(?:\.com)?|zelle|cashapp|cash\s*app|paypal(?:\.me)?)\b/gi;
-const OFFLINE_PAYMENT_PHRASES = /\b(?:pay\s+(?:me\s+)?(?:in\s+)?cash|pay\s+(?:me\s+)?directly|pay\s+(?:me\s+)?outside\s+(?:the\s+)?app|off[- ]platform\s+payment)\b/gi;
+// e.g. venmo me, zelle me, cashapp me, paypal me, gpay, phonepe, paytm, upi, cred, pay me offline, cash is fine
+const OFF_PLATFORM_PAYMENT_REGEX = /\b(?:venmo(?:\.com)?|zelle|cashapp|cash\s*app|paypal(?:\.me)?|gpay|google\s*pay|phonepe|phone\s*pe|paytm|bhim(?:\s*upi)?|cred|upi)\b/gi;
+const OFFLINE_PAYMENT_PHRASES = /\b(?:pay\s+(?:me\s+)?(?:in\s+)?cash|pay\s+(?:me\s+)?directly|pay\s+(?:me\s+)?outside\s+(?:the\s+)?app|off[- ]platform\s+payment|gpay\s+(?:karo|me)|send\s+(?:to\s+)?(?:my\s+)?(?:upi|gpay|phonepe)|pay\s+(?:me\s+)?via\s+upi)\b/gi;
 
 /**
  * Evaluates whether text contains off-platform contact or payment leakage.
@@ -103,7 +110,12 @@ export function maskContactInfo(text: string): LeakageDetectionResult {
     masked = masked.replace(SOCIAL_HANDLE_PREFIX_REGEX, MASK_REPLACEMENT);
   }
 
-  // 5. Check & mask off-platform payment providers
+  // 5. Check & mask UPI VPAs and off-platform payment providers
+  if (UPI_ID_REGEX.test(masked)) {
+    detectedPatterns.add('upi_id');
+    masked = masked.replace(UPI_ID_REGEX, PAYMENT_MASK_REPLACEMENT);
+  }
+
   if (OFF_PLATFORM_PAYMENT_REGEX.test(masked)) {
     detectedPatterns.add('off_platform_payment');
     masked = masked.replace(OFF_PLATFORM_PAYMENT_REGEX, PAYMENT_MASK_REPLACEMENT);
@@ -126,7 +138,13 @@ export function maskContactInfo(text: string): LeakageDetectionResult {
     masked = masked.replace(SPACED_DIGITS_REGEX, MASK_REPLACEMENT);
   }
 
-  // 8. Check & mask standard/formatted phone numbers
+  // 8. Check & mask Indian mobile numbers (+91, 10 digits starting with 6-9)
+  if (INDIAN_PHONE_REGEX.test(masked)) {
+    detectedPatterns.add('phone_india');
+    masked = masked.replace(INDIAN_PHONE_REGEX, MASK_REPLACEMENT);
+  }
+
+  // 9. Check & mask standard/formatted phone numbers
   if (PHONE_REGEX.test(masked)) {
     detectedPatterns.add('phone');
     masked = masked.replace(PHONE_REGEX, MASK_REPLACEMENT);

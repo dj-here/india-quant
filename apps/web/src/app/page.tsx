@@ -82,14 +82,14 @@ export default function HomePage() {
                 </div>
 
                 <div className="flex flex-col">
-                  <label className="text-xs font-bold uppercase text-slate-500 mb-1">City or Zip</label>
+                  <label className="text-xs font-bold uppercase text-slate-500 mb-1">City or Locality</label>
                   <div className="relative">
                     <MapPin className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
                     <input
                       type="text"
                       name="location"
-                      placeholder="e.g. Austin, TX"
-                      defaultValue="Austin, TX"
+                      placeholder="e.g. Bengaluru, KA"
+                      defaultValue="Bengaluru, KA"
                       className="w-full rounded-lg border border-slate-300 pl-9 pr-3 py-2 text-sm font-medium focus:border-emerald-500 focus:outline-none"
                     />
                   </div>

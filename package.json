@@ -10,7 +10,7 @@
   "scripts": {
     "dev": "pnpm --filter web dev",
     "dev:all": "pnpm --parallel dev",
-    "build": "pnpm --recursive build",
+    "build": "pnpm --filter @pawstay/shared build && pnpm --filter @pawstay/db generate && pnpm --filter @pawstay/db build && pnpm --filter @pawstay/web build",
     "test": "vitest run",
     "test:unit": "vitest run packages/shared",
     "test:coverage": "vitest run --coverage",
