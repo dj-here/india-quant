@@ -3,6 +3,7 @@ import { Queue, Worker, Job } from 'bullmq';
 import Redis from 'ioredis';
 import { runLedgerReconciliation } from './reconciliation.js';
 import { executeDailyUpdateNudge } from './update-nudge.js';
+import { executeReviewReveal } from './review-reveal.js';
 import { prisma } from '@pawstay/db';
 
 const logger = pino({
@@ -66,8 +67,8 @@ export async function startWorker() {
     QUEUE_NAMES.REVIEW_REVEAL,
     async (job: Job) => {
       logger.info({ jobId: job.id, data: job.data }, 'Processing review reveal sweep...');
-      // Logic executed in Phase 6
-      return { revealedReviews: 0 };
+      const report = await executeReviewReveal(prisma);
+      return report;
     },
     { connection, concurrency: 5 }
   );
