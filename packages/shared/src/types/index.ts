@@ -60,22 +60,7 @@ export interface MoneyMinor {
   currency: string; // ISO 4217, e.g. "USD"
 }
 
-export interface PriceBreakdown {
-  currency: string;
-  unitPriceMinor: number;
-  units: number; // days or visits or walks
-  baseAmountMinor: number;
-  additionalPetsCount: number;
-  additionalPetsSurchargeMinor: number;
-  holidaySurchargeMinor: number;
-  puppySurchargeMinor: number;
-  extendedStayDiscountMinor: number;
-  subtotalMinor: number; // sitter base before platform fee
-  ownerServiceFeeMinor: number;
-  ownerTotalMinor: number; // Total charged to pet owner
-  sitterCommissionMinor: number;
-  sitterNetPayoutMinor: number; // Total paid to sitter
-}
+export type { PriceBreakdown, PricingLineItem, PricingInput } from '../pricing/index.js';
 
 export interface SitterRankingComponents {
   relevanceScore: number; // 0..1

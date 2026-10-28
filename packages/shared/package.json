@@ -27,6 +27,16 @@
       "import": "./dist/schemas/index.js",
       "default": "./dist/schemas/index.js"
     },
+    "./pricing": {
+      "types": "./dist/pricing/index.d.ts",
+      "import": "./dist/pricing/index.js",
+      "default": "./dist/pricing/index.js"
+    },
+    "./ranking": {
+      "types": "./dist/ranking/index.d.ts",
+      "import": "./dist/ranking/index.js",
+      "default": "./dist/ranking/index.js"
+    },
     "./env": {
       "types": "./dist/env.d.ts",
       "import": "./dist/env.js",
