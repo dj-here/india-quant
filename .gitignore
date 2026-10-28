@@ -38,3 +38,11 @@ Thumbs.db
 
 # Cloudflared portable binary
 cloudflared.exe
+
+# Job scrapers & temporary scans (preserve untouched)
+*.py
+ion_jobs.json
+start-pujaconnect.bat
+start-live-server.bat
+stop-live-server.bat
+
