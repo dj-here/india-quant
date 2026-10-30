@@ -1,6 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
+  "buildCommand": "cd ../.. && pnpm --filter @pawstay/shared build && pnpm --filter @pawstay/db generate && pnpm --filter @pawstay/db build && pnpm --filter @pawstay/web build",
+  "outputDirectory": ".next",
   "headers": [
     {
       "source": "/api/search",
