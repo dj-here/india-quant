@@ -14,8 +14,8 @@
     }
   },
   "scripts": {
-    "generate": "prisma generate",
-    "push": "prisma db push",
+    "generate": "node ../../scripts/sync-prisma-provider.js && prisma generate",
+    "push": "node ../../scripts/sync-prisma-provider.js && prisma db push",
     "migrate": "prisma migrate dev",
     "seed": "tsx src/seed.ts",
     "build": "tsc",
