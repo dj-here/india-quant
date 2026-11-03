@@ -5,7 +5,12 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
-    include: ['**/*.test.ts'],
+    env: {
+      DATABASE_URL: 'file:./dev.db',
+      NEXTAUTH_SECRET: 'test_secret_for_vitest_min_32_characters_long',
+      NEXTAUTH_URL: 'http://localhost:3000',
+    },
+    include: ['tests/unit/**/*.test.ts', 'tests/integration/**/*.test.ts'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
@@ -13,7 +18,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@pawstay/shared': path.resolve(__dirname, './packages/shared/src/index.ts'),
+      '@': path.resolve(__dirname, './apps/web/src'),
       '@pawstay/db': path.resolve(__dirname, './packages/db/src/index.ts'),
     },
   },

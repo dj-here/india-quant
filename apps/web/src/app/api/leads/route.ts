@@ -6,6 +6,8 @@ import { leadRequestSchema } from '@/lib/validations';
 import { checkRateLimit } from '@/lib/rateLimit';
 import { sendLeadConfirmationEmails } from '@/lib/email';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(req: NextRequest) {
   try {
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || '127.0.0.1';

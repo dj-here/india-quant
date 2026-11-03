@@ -16,7 +16,6 @@ playwright-report/
 blob-report/
 *.tsbuildinfo
 
-
 # Environment files
 .env
 .env*.local
@@ -31,7 +30,6 @@ uploads/
 minio-data/
 backups/
 
-
 # Logs
 logs/
 *.log
@@ -44,10 +42,14 @@ yarn-error.log*
 Thumbs.db
 cloudflared.exe
 
-# Job scrapers & temporary scans (preserve untouched)
+# Legacy job scrapers & scans
 *.py
-ion_jobs.json
-start-pujaconnect.bat
-start-live-server.bat
-stop-live-server.bat
+*.bat
+*.json
+!package.json
+!tsconfig.json
+!packages/*/package.json
+!packages/*/tsconfig.json
+!apps/*/package.json
+!apps/*/tsconfig.json
 freshers_daily/
