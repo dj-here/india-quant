@@ -1,5 +1,5 @@
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -7,624 +7,92 @@ generator client {
   provider = "prisma-client-js"
 }
 
-enum UserRole {
-  OWNER
-  SITTER
-  ADMIN
+model CollegeLead {
+  id                 String    @id @default(cuid())
+  collegeName        String
+  city               String
+  state              String
+  contactPerson      String
+  role               String
+  email              String
+  phone              String
+  studentStrength    Int
+  targetYears        String
+  targetBranches     String
+  interestedPrograms String
+  preferredMode      String    @default("ON_CAMPUS")
+  message            String?
+  status             String    @default("NEW") // "NEW", "CONTACTED", "DEMO_SCHEDULED", "PILOT_SIGNED", "WON", "LOST"
+  notes              String?
+  followUpDate       DateTime?
+  ipAddress          String?
+  userAgent          String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 }
 
-enum ServiceType {
-  BOARDING
-  HOUSE_SITTING
-  DROP_IN
-  DAY_CARE
-  WALKING
+model AssessmentQuestion {
+  id            String   @id @default(cuid())
+  section       String   // "QUANT", "LOGICAL", "VERBAL", "DSA_BASIC"
+  subTopic      String
+  difficulty    String   @default("MEDIUM") // "EASY", "MEDIUM", "HARD"
+  questionText  String
+  codeSnippet   String?
+  options       String   // JSON stringified array of 4 choices
+  correctAnswer Int      // 0, 1, 2, or 3
+  explanation   String
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
 }
 
-enum BookingStatus {
-  DRAFT
-  REQUESTED
-  ACCEPTED
-  DECLINED
-  EXPIRED
-  PAID_HELD
-  IN_PROGRESS
-  COMPLETED
-  PAYOUT_RELEASED
-  CANCELLED_BY_OWNER
-  CANCELLED_BY_SITTER
-  DISPUTED
-  REFUNDED
-}
-
-enum PetSpecies {
-  DOG
-  CAT
-}
-
-enum SitterVerificationStatus {
-  PENDING
-  APPROVED
-  REJECTED
-  CHANGES_REQUESTED
-}
-
-enum CancellationPolicyType {
-  FLEXIBLE
-  MODERATE
-  STRICT
-}
-
-enum HomeType {
-  HOUSE
-  APARTMENT
-  CONDO
-}
-
-enum YardSize {
-  NONE
-  SMALL
-  MEDIUM
-  LARGE
-}
-
-enum LedgerEntryType {
-  CHARGE
-  OWNER_SERVICE_FEE
-  SITTER_PAYABLE
-  SITTER_COMMISSION
-  REFUND_OWNER
-  PAYOUT_SITTER
-}
-
-enum DisputeStatus {
-  OPENED
-  UNDER_INVESTIGATION
-  RESOLVED_REFUND
-  RESOLVED_PAYOUT
-  DISMISSED
-}
-
-enum ReportStatus {
-  PENDING
-  ACTIONED
-  DISMISSED
-}
-
-enum ReportReason {
-  OFF_PLATFORM_PAYMENT_REQUEST
-  HARASSMENT_OR_ABUSE
-  SAFETY_CONCERN
-  FRAUD_OR_IMPERSONATION
-  ANIMAL_WELFARE
-  OTHER
-}
-
-model User {
-  id               String       @id @default(uuid())
-  email            String       @unique
-  passwordHash     String?
-  name             String
-  avatarUrl        String?
-  phoneNumber      String?
-  roles            UserRole[]   @default([OWNER])
-  isEmailVerified  Boolean      @default(false)
-  isActive         Boolean      @default(true)
-  createdAt        DateTime     @default(now())
-  updatedAt        DateTime     @updatedAt
-
-  profile          Profile?
-  sitterProfile    SitterProfile?
-  pets             Pet[]
-  ownerBookings    Booking[]    @relation("OwnerBookings")
-  reviewsAuthored  Review[]     @relation("ReviewsAuthored")
-  reviewsReceived  Review[]     @relation("ReviewsReceived")
-  messagesSent     Message[]
-  conversationsAsOwner Conversation[] @relation("ConversationOwner")
-  notifications    Notification[]
-  auditLogs        AuditLog[]
-  reportsFiled     Report[]     @relation("Reporter")
-  reportsReceived  Report[]     @relation("ReportedUser")
-  disputesInitiated Dispute[]   @relation("DisputeInitiator")
-
-  @@index([email])
-}
-
-model Profile {
-  id                   String   @id @default(uuid())
-  userId               String   @unique
-  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  bio                  String?
-  emergencyContactName String?
-  emergencyContactPhone String?
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
-}
-
-model SitterProfile {
-  id                     String                  @id @default(uuid())
-  userId                 String                  @unique
-  user                   User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  headline               String
-  bio                    String
-  yearsOfExperience      Int                     @default(1)
-  addressLine1           String
-  addressLine2           String?
-  city                   String
-  state                  String
-  postalCode             String
-  country                String                  @default("USA")
-  latitude               Float
-  longitude              Float
-  approxLatitude         Float
-  approxLongitude        Float
-  approxRadiusMiles      Float                   @default(0.75)
-  cancellationPolicy     CancellationPolicyType  @default(MODERATE)
-  status                 SitterVerificationStatus @default(PENDING)
-  ratingBayesian         Float                   @default(4.8)
-  reviewCount            Int                     @default(0)
-  responseTimeMinutes    Int                     @default(15)
-  responseRatePercent    Int                     @default(100)
-  reliabilityScore       Float                   @default(1.0)
-  instantBookEnabled     Boolean                 @default(false)
-  maxPetCapacity         Int                     @default(2)
-  acceptedSpecies        PetSpecies[]            @default([DOG, CAT])
-  hasMedicationExperience Boolean                @default(false)
-  hasPuppyExperience     Boolean                 @default(false)
-  hasSeniorExperience    Boolean                 @default(false)
-  stripeConnectAccountId String?
-  stripeChargesEnabled   Boolean                 @default(false)
-  stripePayoutsEnabled   Boolean                 @default(false)
-  safetyQuizPassed       Boolean                 @default(false)
-  approvedAt             DateTime?
-  createdAt              DateTime                @default(now())
-  updatedAt              DateTime                @updatedAt
-
-  verification           SitterVerification?
-  homeProfile            HomeProfile?
-  services               Service[]
-  availabilities         Availability[]
-  bookings               Booking[]               @relation("SitterBookings")
-  conversationsAsSitter  Conversation[]          @relation("ConversationSitter")
-  updatesPosted          UpdatePost[]
-  payouts                Payout[]
-
-  @@index([status, city])
-  @@index([latitude, longitude])
-  @@index([ratingBayesian, reviewCount])
-}
-
-model SitterVerification {
-  id                    String                   @id @default(uuid())
-  sitterProfileId       String                   @unique
-  sitterProfile         SitterProfile            @relation(fields: [sitterProfileId], references: [id], onDelete: Cascade)
-  status                SitterVerificationStatus @default(PENDING)
-  idDocumentType        String?                  // 'PASSPORT' | 'DRIVERS_LICENSE' | 'STATE_ID'
-  idDocumentFrontUrl    String?
-  idDocumentBackUrl     String?
-  selfieUrl             String?
-  identityCheckStatus   String                   @default("PENDING") // 'VERIFIED' | 'FAILED'
-  backgroundCheckStatus String                   @default("PENDING") // 'CLEAR' | 'CONSIDER'
-  backgroundCheckRef    String?
-  adminNotes            String?
-  reviewedByUserId      String?
-  reviewedAt            DateTime?
-  createdAt             DateTime                 @default(now())
-  updatedAt             DateTime                 @updatedAt
-}
-
-model HomeProfile {
-  id                    String        @id @default(uuid())
-  sitterProfileId       String        @unique
-  sitterProfile         SitterProfile @relation(fields: [sitterProfileId], references: [id], onDelete: Cascade)
-  homeType              HomeType      @default(HOUSE)
-  hasFencedYard         Boolean       @default(false)
-  yardSize              YardSize      @default(NONE)
-  hasOtherPetsInHome    Boolean       @default(false)
-  otherPetsDetails      String?
-  hasChildrenInHome     Boolean       @default(false)
-  isSmokingFree         Boolean       @default(true)
-  allowsPetsOnFurniture Boolean       @default(true)
-  photos                String[]      @default([])
-  createdAt             DateTime      @default(now())
-  updatedAt             DateTime      @updatedAt
-}
-
-model Service {
-  id                          String        @id @default(uuid())
-  sitterProfileId             String
-  sitterProfile               SitterProfile @relation(fields: [sitterProfileId], references: [id], onDelete: Cascade)
-  serviceType                 ServiceType
-  isActive                    Boolean       @default(true)
-  baseRateMinor               Int           // in cents, e.g. 4500 ($45.00)
-  additionalPetRateMinor      Int           @default(2000)
-  holidaySurchargeMinor       Int           @default(1500)
-  puppySurchargeMinor         Int           @default(1000)
-  extendedStayDiscountPercent Int           @default(0) // 0 - 50%
-  createdAt                   DateTime      @default(now())
-  updatedAt                   DateTime      @updatedAt
-
-  @@unique([sitterProfileId, serviceType])
-  @@index([serviceType, isActive, baseRateMinor])
-}
-
-model Availability {
-  id              String        @id @default(uuid())
-  sitterProfileId String
-  sitterProfile   SitterProfile @relation(fields: [sitterProfileId], references: [id], onDelete: Cascade)
-  date            DateTime      @db.Date
-  isBlocked       Boolean       @default(false)
-  isRecurringRule Boolean       @default(false)
-  notes           String?
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-
-  @@unique([sitterProfileId, date])
-  @@index([sitterProfileId, date, isBlocked])
-}
-
-model Pet {
-  id                     String      @id @default(uuid())
-  ownerId                String
-  owner                  User        @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  name                   String
-  species                PetSpecies  @default(DOG)
-  breed                  String
-  ageYears               Int
-  weightLbs              Float
-  isSpayedNeutered       Boolean     @default(true)
-  temperamentFlags       String[]    @default([])
-  medications            String?
-  feedingSchedule        String
-  allergies              String?
-  vetName                String
-  vetPhone               String
-  vetClinic              String?
-  microchipId            String?
-  emergencyContactName   String
-  emergencyContactPhone  String
-  vaccinationUrls        String[]    @default([])
-  photoUrl               String?
-  isArchived             Boolean     @default(false)
-  createdAt              DateTime    @default(now())
-  updatedAt              DateTime    @updatedAt
-
-  bookingPets            BookingPet[]
-
-  @@index([ownerId])
-}
-
-model Booking {
-  id                             String                 @id @default(uuid())
-  bookingNumber                  String                 @unique // Human-readable e.g. PAW-2026-94821
-  ownerId                        String
-  owner                          User                   @relation("OwnerBookings", fields: [ownerId], references: [id], onDelete: Restrict)
-  sitterId                       String
-  sitter                         SitterProfile          @relation("SitterBookings", fields: [sitterId], references: [id], onDelete: Restrict)
-  serviceType                    ServiceType
-  status                         BookingStatus          @default(DRAFT)
-  startDate                      DateTime
-  endDate                        DateTime
-  unitsCount                     Int                    // e.g. 3 nights or 2 walks
-  unitPriceMinor                 Int                    // e.g. 4500 cents
-  baseAmountMinor                Int                    // unitsCount * unitPriceMinor
-  additionalPetsSurchargeMinor   Int                    @default(0)
-  holidaySurchargeMinor          Int                    @default(0)
-  puppySurchargeMinor            Int                    @default(0)
-  extendedStayDiscountMinor      Int                    @default(0)
-  subtotalMinor                  Int                    // Sitter subtotal before platform fee
-  ownerServiceFeeMinor           Int                    // Owner service fee (e.g. 7%)
-  ownerTotalMinor                Int                    // Subtotal + ownerServiceFeeMinor
-  sitterCommissionMinor          Int                    // Sitter commission (e.g. 12%)
-  sitterNetPayoutMinor           Int                    // Subtotal - sitterCommissionMinor
-  currency                       String                 @default("USD")
-  specialInstructions            String?
-  vetEmergencyLimitMinor         Int                    @default(50000) // $500 default
-  cancellationPolicy             CancellationPolicyType @default(MODERATE)
-  paidAt                         DateTime?
-  startedAt                      DateTime?
-  completedAt                    DateTime?
-  payoutReleasedAt               DateTime?
-  cancelledAt                    DateTime?
-  cancelledByUserId              String?
-  cancelReason                   String?
-  cancellationRefundMinor        Int?
-  metadata                       Json?
-  createdAt                      DateTime               @default(now())
-  updatedAt                      DateTime               @updatedAt
-
-  bookingPets                    BookingPet[]
-  paymentIntents                 PaymentIntent[]
-  charges                        Charge[]
-  payouts                        Payout[]
-  refunds                        Refund[]
-  ledgerEntries                  LedgerEntry[]
-  reviews                        Review[]
-  updates                        UpdatePost[]
-  disputes                       Dispute[]
-  reports                        Report[]
-  conversation                   Conversation?
-
-  @@index([ownerId, status])
-  @@index([sitterId, status])
-  @@index([startDate, endDate])
-  @@index([status])
-}
-
-model BookingPet {
-  id        String   @id @default(uuid())
-  bookingId String
-  booking   Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  petId     String
-  pet       Pet      @relation(fields: [petId], references: [id], onDelete: Restrict)
-  createdAt DateTime @default(now())
-
-  @@unique([bookingId, petId])
-}
-
-model PaymentIntent {
-  id                String   @id @default(uuid())
-  bookingId         String
-  booking           Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  providerPaymentId String   @unique // e.g., Stripe PaymentIntent ID 'pi_12345'
-  clientSecret      String?
-  amountMinor       Int
-  currency          String   @default("USD")
-  status            String   // 'REQUIRES_PAYMENT_METHOD' | 'REQUIRES_CAPTURE' | 'SUCCEEDED' | 'CANCELED'
-  idempotencyKey    String   @unique
-  rawEvent          Json?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-
-  charges           Charge[]
-  @@index([bookingId])
-}
-
-model Charge {
-  id                String        @id @default(uuid())
-  bookingId         String
-  booking           Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  paymentIntentId   String
-  paymentIntent     PaymentIntent @relation(fields: [paymentIntentId], references: [id], onDelete: Cascade)
-  providerChargeId  String        @unique // e.g., Stripe Charge ID 'ch_12345'
-  amountMinor       Int
-  currency          String        @default("USD")
-  feeMinor          Int           @default(0) // Processing fee
-  capturedAt        DateTime      @default(now())
-  receiptUrl        String?
-  createdAt         DateTime      @default(now())
-
-  @@index([bookingId])
-}
-
-model Payout {
-  id                 String        @id @default(uuid())
-  bookingId          String
-  booking            Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  sitterId           String
-  sitter             SitterProfile @relation(fields: [sitterId], references: [id], onDelete: Cascade)
-  providerPayoutId   String?       @unique // e.g., Stripe Transfer ID 'tr_12345'
-  amountMinor        Int
-  currency           String        @default("USD")
-  status             String        @default("PENDING") // 'PENDING' | 'SCHEDULED' | 'PROCESSING' | 'PAID' | 'FAILED'
-  scheduledReleaseAt DateTime
-  releasedAt         DateTime?
-  failureReason      String?
-  idempotencyKey     String        @unique
-  createdAt          DateTime      @default(now())
-  updatedAt          DateTime      @updatedAt
-
-  @@index([bookingId])
-  @@index([sitterId, status])
-  @@index([scheduledReleaseAt, status])
-}
-
-model Refund {
-  id               String   @id @default(uuid())
-  bookingId        String
-  booking          Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  providerRefundId String?  @unique // e.g., Stripe Refund ID 're_12345'
-  amountMinor      Int
-  currency         String   @default("USD")
-  reason           String?
-  status           String   @default("SUCCEEDED")
-  idempotencyKey   String   @unique
+model AssessmentSubmission {
+  id               String   @id @default(cuid())
+  studentName      String
+  studentEmail     String
+  studentPhone     String
+  collegeName      String
+  branch           String
+  graduationYear   Int
+  totalScore       Int
+  percentage       Float
+  quantScore       Int
+  logicalScore     Int
+  verbalScore      Int
+  dsaScore         Int
+  timeTakenSeconds Int
+  readinessBand    String   // "SUPER_DREAM_READY", "PLACEMENT_READY", "FOUNDATION_NEEDED"
+  answersJson      String
   createdAt        DateTime @default(now())
-
-  @@index([bookingId])
 }
 
-model LedgerEntry {
-  id             String          @id @default(uuid())
-  bookingId      String
-  booking        Booking         @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  entryType      LedgerEntryType
-  debitAccount   String          // e.g., 'STRIPE_CLEARING', 'PLATFORM_REVENUE'
-  creditAccount  String          // e.g., 'SITTER_PAYABLE', 'OWNER_REFUND'
-  amountMinor    Int
-  currency       String          @default("USD")
-  idempotencyKey String          @unique
-  referenceId    String?         // Stripe charge/transfer/refund ID
-  description    String
-  createdAt      DateTime        @default(now())
-
-  @@index([bookingId])
-  @@index([entryType])
+model Testimonial {
+  id           String   @id @default(cuid())
+  authorName   String
+  designation  String
+  collegeName  String
+  city         String
+  quote        String
+  rating       Int      @default(5)
+  authorAvatar String?
+  isFeatured   Boolean  @default(true)
+  order        Int      @default(0)
+  createdAt    DateTime @default(now())
 }
 
-model Conversation {
-  id        String    @id @default(uuid())
-  bookingId String?   @unique
-  booking   Booking?  @relation(fields: [bookingId], references: [id], onDelete: SetNull)
-  ownerId   String
-  owner     User      @relation("ConversationOwner", fields: [ownerId], references: [id], onDelete: Cascade)
-  sitterId  String
-  sitter    SitterProfile @relation("ConversationSitter", fields: [sitterId], references: [id], onDelete: Cascade)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-
-  messages  Message[]
-
-  @@unique([ownerId, sitterId])
-  @@index([ownerId])
-  @@index([sitterId])
-}
-
-model Message {
-  id                   String       @id @default(uuid())
-  conversationId       String
-  conversation         Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  senderId             String
-  sender               User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
-  text                 String
-  maskedText           String?      // pre-booking masked content
-  hasOffPlatformAttempt Boolean     @default(false)
-  attachments          String[]     @default([])
-  isRead               Boolean      @default(false)
-  createdAt            DateTime     @default(now())
-
-  @@index([conversationId, createdAt])
-}
-
-model Review {
-  id                  String    @id @default(uuid())
-  bookingId           String
-  booking             Booking   @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  authorId            String
-  author              User      @relation("ReviewsAuthored", fields: [authorId], references: [id], onDelete: Cascade)
-  targetId            String
-  target              User      @relation("ReviewsReceived", fields: [targetId], references: [id], onDelete: Cascade)
-  authorRole          UserRole  // 'OWNER' or 'SITTER'
-  rating              Int       // 1-5
-  title               String?
-  content             String
-  cleanlinessRating   Int?      // 1-5
-  communicationRating Int?      // 1-5
-  timelinessRating    Int?      // 1-5
-  careQualityRating   Int?      // 1-5
-  isRecommended       Boolean   @default(true)
-  isBlind             Boolean   @default(true) // Double-blind until both submitted or 14-day expiry
-  revealedAt          DateTime?
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
-
-  @@unique([bookingId, authorId])
-  @@index([targetId, isBlind])
-  @@index([bookingId])
-}
-
-model UpdatePost {
-  id               String        @id @default(uuid())
-  bookingId        String
-  booking          Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  sitterId         String
-  sitter           SitterProfile @relation(fields: [sitterId], references: [id], onDelete: Cascade)
-  text             String
-  mediaUrls        String[]      @default([])
-  peeCount         Int?          @default(0)
-  poopCount        Int?          @default(0)
-  fedMeal          Boolean?      @default(false)
-  medsAdministered Boolean?      @default(false)
-  createdAt        DateTime      @default(now())
-
-  @@index([bookingId, createdAt])
-}
-
-model Dispute {
-  id                   String        @id @default(uuid())
-  bookingId            String
-  booking              Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  initiatorId          String
-  initiator            User          @relation("DisputeInitiator", fields: [initiatorId], references: [id], onDelete: Cascade)
-  reason               String
-  description          String
-  evidenceUrls         String[]      @default([])
-  requestedRefundMinor Int?
-  status               DisputeStatus @default(OPENED)
-  resolutionNotes      String?
-  resolvedAt           DateTime?
-  createdAt            DateTime      @default(now())
-  updatedAt            DateTime      @updatedAt
-
-  @@index([bookingId])
-  @@index([status])
-}
-
-model Report {
-  id              String       @id @default(uuid())
-  reporterId      String
-  reporter        User         @relation("Reporter", fields: [reporterId], references: [id], onDelete: Cascade)
-  reportedUserId  String
-  reportedUser    User         @relation("ReportedUser", fields: [reportedUserId], references: [id], onDelete: Cascade)
-  conversationId  String?
-  bookingId       String?
-  booking         Booking?     @relation(fields: [bookingId], references: [id], onDelete: SetNull)
-  reason          ReportReason
-  details         String
-  status          ReportStatus @default(PENDING)
-  resolutionNotes String?
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
-
-  @@index([status])
-  @@index([reportedUserId])
-}
-
-model Notification {
-  id        String   @id @default(uuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  title     String
-  message   String
-  actionUrl String?
-  type      String   // 'BOOKING_REQUEST' | 'UPDATE_POSTED' | 'REVIEW_RECEIVED' | 'PAYMENT_CONFIRMED'
-  isRead    Boolean  @default(false)
+model FaqItem {
+  id        String   @id @default(cuid())
+  category  String   @default("GENERAL") // "COLLEGES", "CURRICULUM", "COMMERCIALS", "GENERAL"
+  question  String
+  answer    String
+  order     Int      @default(0)
   createdAt DateTime @default(now())
-
-  @@index([userId, isRead])
 }
 
-model AuditLog {
-  id         String   @id @default(uuid())
-  userId     String?
-  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
-  action     String   // e.g. 'BOOKING_STATE_TRANSITION', 'PAYOUT_RELEASE', 'SITTER_APPROVED'
-  entityType String   // 'Booking', 'SitterProfile', 'Dispute'
-  entityId   String
-  oldState   Json?
-  newState   Json?
-  ipAddress  String?
-  userAgent  String?
-  metadata   Json?
-  createdAt  DateTime @default(now())
-
-  @@index([entityType, entityId])
-  @@index([action, createdAt])
-}
-
-model PlatformSetting {
-  id              String   @id @default(uuid())
-  key             String   @unique // e.g. 'OWNER_SERVICE_FEE_BPS', 'SITTER_COMMISSION_BPS'
-  value           String
-  description     String?
-  updatedByUserId String?
-  updatedAt       DateTime @updatedAt
-
-  @@index([key])
-}
-
-model Coupon {
-  id                String    @id @default(uuid())
-  code              String    @unique
-  discountPercent   Int       // 1 - 100%
-  maxDiscountMinor  Int?      // Cap on discount
-  validFrom         DateTime  @default(now())
-  validTo           DateTime
-  maxUses           Int       @default(100)
-  currentUses       Int       @default(0)
-  isActive          Boolean   @default(true)
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-
-  @@index([code, isActive])
+model AdminUser {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  role         String   @default("ADMIN")
+  createdAt    DateTime @default(now())
 }

@@ -1,52 +1,84 @@
 import React from 'react';
-import Link from 'next/link';
-import { ArrowLeft, Shield } from 'lucide-react';
+import { Metadata } from 'next';
 
-export default function PrivacyPolicyPage() {
+export const metadata: Metadata = {
+  title: 'Privacy Policy | DPDP Act 2023 Compliance',
+  description:
+    'CampusEdge privacy policy compliant with India’s Digital Personal Data Protection (DPDP) Act, 2023. Clear information on student and institutional data governance.',
+};
+
+export default function PrivacyPage() {
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <div className="mb-6">
-        <Link href="/" className="inline-flex items-center text-xs font-semibold text-slate-600 hover:text-slate-900">
-          <ArrowLeft className="h-4 w-4 mr-1.5" /> Back to Home
-        </Link>
-      </div>
-
-      <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 mb-8 text-xs text-amber-900">
-        <span className="font-bold">⚠️ LEGAL NOTICE / COUNSEL REVIEW NOTICE: </span>
-        This Privacy Policy complies with GDPR and CCPA requirements, including explicit Right to Access (data export) and Right to Erasure (account anonymization). Specific DPO contact details to be finalized by counsel.
-      </div>
-
-      <div className="prose prose-slate max-w-none">
-        <h1 className="text-3xl font-extrabold text-slate-900 mb-2">PawStay Privacy Policy</h1>
-        <p className="text-xs text-slate-400 mb-8">Last Updated: October 2026 · Version 1.0</p>
-
-        <section className="mb-6">
-          <h2 className="text-lg font-bold text-slate-900 mb-2">1. Information We Collect</h2>
-          <p className="text-sm text-slate-600 leading-relaxed">
-            We collect personal information necessary to deliver marketplace services, including name, email address, phone number, pet medical/vet records, geolocation coordinates, and identity verification credentials (government IDs and selfie biometrics processed via encrypted verification partners).
+    <div className="bg-slate-50 min-h-screen py-16">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 bg-white p-8 lg:p-12 rounded-3xl border border-slate-200 shadow-sm">
+        
+        <div className="border-b border-slate-100 pb-6 mb-8 space-y-2">
+          <span className="text-xs font-bold text-sky-600 uppercase tracking-widest">Legal &amp; Regulatory Governance</span>
+          <h1 className="text-3xl font-black text-slate-900">Privacy Policy</h1>
+          <p className="text-xs text-slate-500">
+            Last Updated: November 2026 | Compliant with India&apos;s Digital Personal Data Protection (DPDP) Act, 2023
           </p>
-        </section>
+        </div>
 
-        <section className="mb-6">
-          <h2 className="text-lg font-bold text-slate-900 mb-2">2. Geolocation & Sitter Address Privacy</h2>
-          <p className="text-sm text-slate-600 leading-relaxed">
-            To protect host safety and prevent harassment, exact physical addresses and precise GPS coordinates are strictly obfuscated. Sitter search results display approximate locations randomized within a 0.75-mile radius. Exact physical addresses are revealed only after a booking is accepted and paid in escrow.
-          </p>
-        </section>
+        <div className="prose prose-slate max-w-none text-xs leading-relaxed space-y-6 text-slate-700">
+          <section className="space-y-2">
+            <h2 className="text-base font-bold text-slate-900">1. Commitment to Data Protection</h2>
+            <p>
+              CampusEdge Learning Solutions (operating under legal entity <em>CampusEdge EdTech Private Limited</em>, hereinafter &ldquo;CampusEdge&rdquo;, &ldquo;we&rdquo;, &ldquo;us&rdquo;) is committed to safeguarding personal and institutional data in accordance with the provisions of India&apos;s <strong>Digital Personal Data Protection Act, 2023 (DPDP Act 2023)</strong> and applicable higher education data standards.
+            </p>
+          </section>
 
-        <section className="mb-6">
-          <h2 className="text-lg font-bold text-slate-900 mb-2">3. Double-Blind Review Privacy</h2>
-          <p className="text-sm text-slate-600 leading-relaxed">
-            Reviews authored following a stay remain confidential and blinded until both parties have submitted feedback or 14 calendar days have elapsed.
-          </p>
-        </section>
+          <section className="space-y-2">
+            <h2 className="text-base font-bold text-slate-900">2. Categories of Data Collected</h2>
+            <p>We collect data under two distinct streams:</p>
+            <ul className="list-disc pl-5 space-y-1">
+              <li><strong>Institutional Decision-Maker Data:</strong> Name, official designation, college name, official email address, mobile phone number, student strength, and institutional requirements submitted via proposal and demo inquiry forms.</li>
+              <li><strong>Student Assessment Data:</strong> Candidate name, academic email, contact number, degree program, branch, graduation year, timed MCQ responses, coding scores, and diagnostic test analytics.</li>
+            </ul>
+          </section>
 
-        <section className="mb-6">
-          <h2 className="text-lg font-bold text-slate-900 mb-2">4. Your Data Rights (GDPR & CCPA)</h2>
-          <p className="text-sm text-slate-600 leading-relaxed">
-            You may request an automated download of all personal data held by PawStay via <code className="text-xs bg-slate-100 p-1 rounded">/api/user/data-export</code> or request complete anonymization and erasure under GDPR Article 17 via <code className="text-xs bg-slate-100 p-1 rounded">/api/user/delete-account</code>.
-          </p>
-        </section>
+          <section className="space-y-2">
+            <h2 className="text-base font-bold text-slate-900">3. Purpose of Processing &amp; Affirmative Consent</h2>
+            <p>
+              Under Section 6 of the DPDP Act 2023, personal data is processed solely on the basis of explicit, informed affirmative consent for the following specified academic purposes:
+            </p>
+            <ul className="list-disc pl-5 space-y-1">
+              <li>Evaluating and presenting student placement readiness diagnostic reports.</li>
+              <li>Compiling section-wise attendance and progress reports formatted for institutional <strong>NBA Criterion 4</strong> and <strong>NAAC Criterion 5.1.3</strong> audits.</li>
+              <li>Coordinating training schedules, lab pre-flight verifications, and trainer allocations with the partner college.</li>
+              <li>Issuing digitally verifiable certificates of course completion.</li>
+            </ul>
+          </section>
+
+          <section className="space-y-2">
+            <h2 className="text-base font-bold text-slate-900">4. Prohibition of Commercial Data Resale</h2>
+            <p>
+              <strong>We do not sell, rent, lease, or monetize student or institutional personal data to third-party commercial aggregators, loan providers, or advertising networks.</strong> Personal information is strictly utilized for the institutional education and assessment services contracted by the partner college or authorized by the student.
+            </p>
+          </section>
+
+          <section className="space-y-2">
+            <h2 className="text-base font-bold text-slate-900">5. Data Retention &amp; Erasure (Section 12 DPDP Act)</h2>
+            <p>
+              Personal data is retained only for the duration required to satisfy pedagogical delivery and accreditation verification (typically up to the completion of the students&apos; graduating academic cycle). Upon written request by an authorized college authority or individual data principal, student records can be permanently expunged from our active operational databases within thirty (30) calendar days.
+            </p>
+          </section>
+
+          <section className="space-y-2">
+            <h2 className="text-base font-bold text-slate-900">6. Data Protection Officer (DPO) Contact</h2>
+            <p>
+              In compliance with the DPDP Act 2023, queries, grievances, or requests for data review may be addressed to our designated Data Protection Grievance Officer:
+            </p>
+            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+              <p className="font-bold text-slate-900">Grievance Redressal Desk</p>
+              <p>CampusEdge EdTech Private Limited</p>
+              <p>Email: <a href="mailto:privacy@campusedge.in" className="text-sky-600 font-semibold">privacy@campusedge.in</a> / <a href="mailto:partnerships@campusedge.in" className="text-sky-600 font-semibold">partnerships@campusedge.in</a></p>
+              <p>Phone: +91 98201 44550</p>
+              <p>Address: #402, Outer Ring Road, Bellandur, Bengaluru, Karnataka – 560103</p>
+            </div>
+          </section>
+        </div>
+
       </div>
     </div>
   );

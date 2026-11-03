@@ -1,91 +1,80 @@
 import { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
-import GoogleProvider from 'next-auth/providers/google';
 import bcrypt from 'bcryptjs';
 import { prisma } from '@pawstay/db';
-import { UserRole } from '@pawstay/shared';
 
 export const authOptions: NextAuthOptions = {
   session: {
     strategy: 'jwt',
-    maxAge: 30 * 24 * 60 * 60, // 30 days
+    maxAge: 7 * 24 * 60 * 60, // 7 days
   },
-  cookies: {
-    sessionToken: {
-      name: process.env.NODE_ENV === 'production' ? '__Secure-next-auth.session-token' : 'next-auth.session-token',
-      options: {
-        httpOnly: true,
-        sameSite: 'lax',
-        path: '/',
-        secure: process.env.NODE_ENV === 'production',
-      },
-    },
+  pages: {
+    signIn: '/admin/login',
   },
   providers: [
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID || 'mock_google_id',
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET || 'mock_google_secret',
-      allowDangerousEmailAccountLinking: true,
-    }),
     CredentialsProvider({
       id: 'credentials',
-      name: 'Credentials',
+      name: 'Admin Credentials',
       credentials: {
-        email: { label: 'Email', type: 'email', placeholder: 'user@pawstay.local' },
+        email: { label: 'Admin Email', type: 'email', placeholder: 'admin@campusedge.in' },
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
-          throw new Error('Email and password are required');
+          throw new Error('Please enter both email and password.');
         }
 
-        const user = await prisma.user.findUnique({
+        const admin = await prisma.adminUser.findUnique({
           where: { email: credentials.email.toLowerCase().trim() },
         });
 
-        if (!user || !user.passwordHash || !user.isActive) {
-          throw new Error('Invalid email or password');
+        if (!admin) {
+          // Check if fallback hardcoded admin matches if DB is fresh
+          const defaultEmail = process.env.ADMIN_DEFAULT_EMAIL || 'admin@campusedge.in';
+          const defaultPassword = process.env.ADMIN_DEFAULT_PASSWORD || 'CampusEdgeAdmin2026!';
+          if (
+            credentials.email.toLowerCase().trim() === defaultEmail.toLowerCase() &&
+            credentials.password === defaultPassword
+          ) {
+            return {
+              id: 'super_admin_fallback',
+              email: defaultEmail,
+              name: 'CampusEdge Super Admin',
+              role: 'ADMIN',
+            };
+          }
+          throw new Error('Invalid email or password.');
         }
 
-        const isValid = await bcrypt.compare(credentials.password, user.passwordHash);
+        const isValid = await bcrypt.compare(credentials.password, admin.passwordHash);
         if (!isValid) {
-          throw new Error('Invalid email or password');
+          throw new Error('Invalid email or password.');
         }
 
         return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          roles: user.roles as UserRole[],
-          avatarUrl: user.avatarUrl,
+          id: admin.id,
+          email: admin.email,
+          name: admin.name,
+          role: admin.role,
         };
       },
     }),
   ],
   callbacks: {
-    async jwt({ token, user, trigger, session }) {
+    async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-        token.roles = (user as any).roles || ['OWNER'];
-        token.avatarUrl = (user as any).avatarUrl;
-      }
-      if (trigger === 'update' && session?.roles) {
-        token.roles = session.roles;
+        token.role = (user as any).role || 'ADMIN';
       }
       return token;
     },
     async session({ session, token }) {
-      if (token && session.user) {
+      if (session.user) {
         (session.user as any).id = token.id;
-        (session.user as any).roles = token.roles || ['OWNER'];
-        (session.user as any).avatarUrl = token.avatarUrl;
+        (session.user as any).role = token.role || 'ADMIN';
       }
       return session;
     },
   },
-  pages: {
-    signIn: '/auth/signin',
-    error: '/auth/error',
-  },
-  secret: process.env.NEXTAUTH_SECRET || 'super_secret_pawstay_jwt_session_token_min_32_chars!',
+  secret: process.env.NEXTAUTH_SECRET || 'campusedge_jwt_secret_token_secure_production_32_chars_minimum!',
 };

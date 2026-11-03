@@ -1,5 +1,3 @@
-const path = require('node:path');
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
@@ -9,9 +7,9 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  transpilePackages: ['@pawstay/shared', '@pawstay/db'],
+  transpilePackages: ['@pawstay/db'],
   experimental: {
-    serverComponentsExternalPackages: ['@prisma/client', 'bcryptjs', 'pino'],
+    serverComponentsExternalPackages: ['@prisma/client', 'bcryptjs'],
   },
   images: {
     remotePatterns: [
@@ -47,14 +45,6 @@ const nextConfig = {
         ],
       },
     ];
-  },
-  webpack: (config) => {
-    config.resolve.extensionAlias = {
-      '.js': ['.ts', '.tsx', '.js', '.jsx'],
-      '.mjs': ['.mts', '.mjs'],
-      '.cjs': ['.cts', '.cjs'],
-    };
-    return config;
   },
 };
 
