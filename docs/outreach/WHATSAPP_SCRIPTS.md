@@ -17,7 +17,7 @@ In the Indian collegiate ecosystem, Training & Placement Officers (TPOs) and Pri
 > May I share a 1-page institutional brochure here for your review?  
 > 
 > Respectfully,  
-> {{SENDER_NAME}} | +91 98201 44550  
+> {{SENDER_NAME}} | +91 63662 14556  
 > https://campusedge.in"
 
 ---
@@ -54,7 +54,7 @@ In the Indian collegiate ecosystem, Training & Placement Officers (TPOs) and Pri
 > Can we lock in a 2-week window for next month before our trainer calendar is fully committed?  
 > 
 > Best regards,  
-> {{SENDER_NAME}} | +91 98201 44550"
+> {{SENDER_NAME}} | +91 63662 14556"
 
 ---
 

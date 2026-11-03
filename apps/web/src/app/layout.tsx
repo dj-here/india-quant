@@ -74,7 +74,7 @@ export default function RootLayout({
     logo: 'https://campusedge.in/logo.png',
     contactPoint: {
       '@type': 'ContactPoint',
-      telephone: '+91-9820144550',
+      telephone: '+91-6366214556',
       contactType: 'Institutional Partnerships',
       areaServed: 'IN',
       availableLanguage: ['English', 'Hindi'],

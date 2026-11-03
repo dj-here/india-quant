@@ -126,6 +126,6 @@ test.describe('CampusEdge Public & Institutional E2E Journeys', () => {
     // Contact page
     await page.goto('/contact');
     await expect(page.getByRole('heading', { name: /Get in Touch with Our Institutional Team/i })).toBeVisible();
-    await expect(page.getByText('partnerships@campusedge.in')).toBeVisible();
+    await expect(page.getByText('dj0791463@gmail.com')).toBeVisible();
   });
 });

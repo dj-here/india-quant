@@ -104,16 +104,16 @@ export function Footer() {
               <li className="flex items-start gap-2.5">
                 <Phone className="w-4 h-4 text-sky-400 shrink-0 mt-0.5" />
                 <div>
-                  <a href="tel:+919820144550" className="hover:text-white transition-colors">
-                    +91 98201 44550
+                  <a href="tel:+916366214556" className="hover:text-white transition-colors">
+                    +91 63662 14556
                   </a>
                   <p className="text-[11px] text-slate-500">Mon-Sat, 9am - 7pm IST</p>
                 </div>
               </li>
               <li className="flex items-center gap-2.5">
                 <Mail className="w-4 h-4 text-sky-400 shrink-0" />
-                <a href="mailto:partnerships@campusedge.in" className="hover:text-white transition-colors">
-                  partnerships@campusedge.in
+                <a href="mailto:dj0791463@gmail.com" className="hover:text-white transition-colors">
+                  dj0791463@gmail.com
                 </a>
               </li>
               <li className="flex items-start gap-2.5">

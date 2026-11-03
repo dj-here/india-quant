@@ -31,8 +31,8 @@ Warm regards,
 **{{SENDER_NAME}}**  
 Head of Institutional Partnerships  
 CampusEdge Learning Solutions  
-Direct / WhatsApp: +91 98201 44550  
-Email: partnerships@campusedge.in | Web: https://campusedge.in  
+Direct / WhatsApp: +91 63662 14556  
+Email: dj0791463@gmail.com | Web: https://campusedge.in  
 
 ---
 
@@ -65,7 +65,7 @@ Best regards,
 
 **{{SENDER_NAME}}**  
 CampusEdge Learning Solutions  
-+91 98201 44550  
++91 63662 14556  
 
 ---
 
@@ -96,7 +96,7 @@ Sincerely,
 
 **{{SENDER_NAME}}**  
 CampusEdge Learning Solutions  
-+91 98201 44550  
++91 63662 14556  
 
 ---
 
@@ -126,7 +126,7 @@ Best regards,
 
 **{{SENDER_NAME}}**  
 CampusEdge Learning Solutions  
-+91 98201 44550  
++91 63662 14556  
 
 ---
 
@@ -146,7 +146,7 @@ I do not want to be a nuisance, so unless I hear back from you, I will assume th
 
 Before I go, I wanted to leave you with our **2026 Campus Recruitment Syllabus & Cheat-Sheet** (attached). It details the 40 most-repeated DSA patterns across TCS, Cognizant, Infosys, and tier-1 product companies this season, along with quantitative aptitude shortcuts. Please feel free to share it with your students and faculty.
 
-If you ever decide to explore a structured, company-standard training partnership in the future, you can reach me directly at **+91 98201 44550** or simply reply to this email.
+If you ever decide to explore a structured, company-standard training partnership in the future, you can reach me directly at **+91 63662 14556** or simply reply to this email.
 
 Wishing you and your students outstanding placement success!
 

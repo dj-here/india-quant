@@ -136,12 +136,12 @@ export default function FaqPage() {
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
             <a
-              href="https://wa.me/919820144550"
+              href="https://wa.me/916366214556"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-sm transition-colors"
             >
-              <Phone className="w-3.5 h-3.5" /> WhatsApp Support (+91 98201 44550)
+              <Phone className="w-3.5 h-3.5" /> WhatsApp Support (+91 63662 14556)
             </a>
             <Link
               href="/demo"

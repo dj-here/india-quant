@@ -72,8 +72,8 @@ export default function PrivacyPage() {
             <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
               <p className="font-bold text-slate-900">Grievance Redressal Desk</p>
               <p>CampusEdge EdTech Private Limited</p>
-              <p>Email: <a href="mailto:privacy@campusedge.in" className="text-sky-600 font-semibold">privacy@campusedge.in</a> / <a href="mailto:partnerships@campusedge.in" className="text-sky-600 font-semibold">partnerships@campusedge.in</a></p>
-              <p>Phone: +91 98201 44550</p>
+              <p>Email: <a href="mailto:dj0791463@gmail.com" className="text-sky-600 font-semibold">dj0791463@gmail.com</a></p>
+              <p>Phone: +91 63662 14556</p>
               <p>Address: #402, Outer Ring Road, Bellandur, Bengaluru, Karnataka – 560103</p>
             </div>
           </section>

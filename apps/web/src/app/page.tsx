@@ -459,12 +459,12 @@ export default async function HomePage() {
               Request Free Demo / Institutional Proposal
             </Link>
             <a
-              href="https://wa.me/919820144550?text=Hi%20CampusEdge,%20we%20want%20to%20schedule%20a%20placement%20demo%20for%20our%20college."
+              href="https://wa.me/916366214556?text=Hi%20CampusEdge,%20we%20want%20to%20schedule%20a%20placement%20demo%20for%20our%20college."
               target="_blank"
               rel="noopener noreferrer"
               className="w-full sm:w-auto px-8 py-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-base transition-colors"
             >
-              Chat on WhatsApp (+91 98201 44550)
+              Chat on WhatsApp (+91 63662 14556)
             </a>
           </div>
           <p className="text-xs text-sky-200 pt-2">

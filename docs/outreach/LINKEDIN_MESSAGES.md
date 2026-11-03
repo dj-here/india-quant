@@ -34,7 +34,7 @@ LinkedIn is an exceptionally effective channel to connect directly with college 
 > Best regards,  
 > **{{SENDER_NAME}}**  
 > Head of Institutional Partnerships, CampusEdge Learning Solutions  
-> +91 98201 44550 | partnerships@campusedge.in | https://campusedge.in
+> +91 63662 14556 | dj0791463@gmail.com | https://campusedge.in
 
 ---
 
@@ -61,4 +61,4 @@ LinkedIn is an exceptionally effective channel to connect directly with college 
 > 
 > Best regards,  
 > **{{SENDER_NAME}}**  
-> +91 98201 44550
+> +91 63662 14556

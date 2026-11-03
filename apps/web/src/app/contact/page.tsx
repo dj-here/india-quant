@@ -43,8 +43,7 @@ export default function ContactPage() {
                   </div>
                   <div>
                     <h3 className="font-bold text-slate-900 text-sm">Direct Line &amp; WhatsApp</h3>
-                    <p className="mt-0.5"><a href="tel:+919820144550" className="hover:text-sky-600 font-semibold">+91 98201 44550</a></p>
-                    <p><a href="tel:+919820144551" className="hover:text-sky-600 font-semibold">+91 98201 44551</a></p>
+                    <p className="mt-0.5"><a href="tel:+916366214556" className="hover:text-sky-600 font-semibold">+91 63662 14556</a></p>
                     <p className="text-slate-400 mt-1">Available Mon – Sat, 9:00 AM – 7:00 PM IST</p>
                   </div>
                 </div>
@@ -54,9 +53,8 @@ export default function ContactPage() {
                     <Mail className="w-4 h-4" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-slate-900 text-sm">Official Email Desks</h3>
-                    <p className="mt-0.5"><a href="mailto:partnerships@campusedge.in" className="hover:text-sky-600 font-semibold">partnerships@campusedge.in</a></p>
-                    <p><a href="mailto:tpo-support@campusedge.in" className="hover:text-sky-600 font-semibold">tpo-support@campusedge.in</a></p>
+                    <h3 className="font-bold text-slate-900 text-sm">Official Email Desk</h3>
+                    <p className="mt-0.5"><a href="mailto:dj0791463@gmail.com" className="hover:text-sky-600 font-semibold">dj0791463@gmail.com</a></p>
                   </div>
                 </div>
 
@@ -81,7 +79,7 @@ export default function ContactPage() {
                 Connect with our Senior Program Lead immediately on WhatsApp to discuss batch sizes and get our 1-page institutional brochure.
               </p>
               <a
-                href="https://wa.me/919820144550?text=Hi%20CampusEdge,%20we%20would%20like%20to%20know%20more%20about%20college%20placement%20training."
+                href="https://wa.me/916366214556?text=Hi%20CampusEdge,%20we%20would%20like%20to%20know%20more%20about%20college%20placement%20training."
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md transition-colors"

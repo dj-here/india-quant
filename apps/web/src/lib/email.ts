@@ -67,7 +67,7 @@ export async function sendLeadConfirmationEmails(lead: {
   interestedPrograms: string;
 }) {
   const companyName = process.env.NEXT_PUBLIC_COMPANY_NAME || 'CampusEdge Learning Solutions';
-  const ownerEmail = process.env.NOTIFICATION_EMAIL || 'partnerships@campusedge.in';
+  const ownerEmail = process.env.NOTIFICATION_EMAIL || 'dj0791463@gmail.com';
 
   // 1. Confirmation to the prospective College Lead (TPO / Principal)
   const leadSubject = `Demo Request Confirmation - CampusEdge Placement Training (${lead.collegeName})`;
@@ -93,7 +93,7 @@ export async function sendLeadConfirmationEmails(lead: {
         <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;" />
         <p style="font-size: 12px; color: #64748b; margin: 0;">
           CampusEdge EdTech Private Limited<br/>
-          TPO Partnerships Desk: +91 98201 44550 | partnerships@campusedge.in
+          TPO Partnerships Desk: +91 63662 14556 | dj0791463@gmail.com
         </p>
       </div>
     </div>

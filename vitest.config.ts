@@ -6,7 +6,7 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     env: {
-      DATABASE_URL: 'file:./dev.db',
+      DATABASE_URL: 'postgresql://neondb_owner:npg_7ICR2DKFNaVT@ep-nameless-hall-ao9yydx4-pooler.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require',
       NEXTAUTH_SECRET: 'test_secret_for_vitest_min_32_characters_long',
       NEXTAUTH_URL: 'http://localhost:3000',
     },
