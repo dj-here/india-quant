@@ -1,6 +1,6 @@
-# KidsMentor — Architecture & System Decisions Log
+# Starfall Survivors — Architecture & System Decisions Log (DECISIONS.md)
 
-This document records the architectural, pedagogical, and safety decisions for **KidsMentor**, an AI-only 1-on-1 tutoring platform for children aged 6–16.
+This document records the architectural, algorithmic, gameplay, and infrastructure decisions for **Starfall Survivors**, a high-polish 2D cosmic arcade survivor game built with Next.js, Phaser 3, TypeScript, Neon Serverless PostgreSQL, Drizzle ORM, and Vercel.
 
 ---
 
@@ -8,221 +8,220 @@ This document records the architectural, pedagogical, and safety decisions for *
 
 | ID | Title | Status | Date | Area |
 |---|---|---|---|---|
-| ADR-001 | Monorepo Structure & Core Stack (Next.js + FastAPI + Postgres) | Accepted | 2026-11-04 | Architecture |
-| ADR-002 | Honest AI Persona: "Ollie the Owl" & Anti-Dependency Policy | Accepted | 2026-11-04 | AI Ethics & Child Safety |
-| ADR-003 | Multi-Agent Orchestration via Explicit State Machine | Accepted | 2026-11-04 | AI Architecture |
-| ADR-004 | Dual Verification: LLM Proposes, Deterministic SymPy Disposes | Accepted | 2026-11-04 | Pedagogy & Correctness |
-| ADR-005 | 3-Layer Defense-in-Depth Child Safety & Childline 1098 Escalation | Accepted | 2026-11-04 | Safety & Compliance |
-| ADR-006 | Privacy & India DPDP Act 2023 / COPPA Minimal-Data Design | Accepted | 2026-11-04 | Legal & Privacy |
-| ADR-007 | Knowledge Graph & Bayesian Knowledge Tracing for Mastery | Accepted | 2026-11-04 | Pedagogy |
-| ADR-008 | Life Values & Ethics 4-Stage Engine (Story-Reflect-Act-Share) | Accepted | 2026-11-04 | Curriculum |
-| ADR-009 | Multimodal & Multilingual Strategy (EN, HI, TE) + Web Speech | Accepted | 2026-11-04 | UX & Localization |
-| ADR-010 | Provider-Agnostic LLM Layer, Caching, Token Budgets & Kill Switches | Accepted | 2026-11-04 | Operations & Cost |
+| ADR-001 | Single Next.js App Router Structure & Boundary Isolation | Accepted | 2026-11-05 | Architecture |
+| ADR-002 | Headless Deterministic Simulation Core (`/src/sim`) & Replay Verification | Accepted | 2026-11-05 | Gameplay / Anti-Cheat |
+| ADR-003 | Phaser 3 Client-Only Game Engine with React UI Overlay Bridge | Accepted | 2026-11-05 | Frontend / Game Engine |
+| ADR-004 | Procedural Vector/Canvas Texture Pipeline & ZzFX/Web Audio Music | Accepted | 2026-11-05 | Assets & Performance |
+| ADR-005 | Neon Postgres with Drizzle ORM (Pooled Runtime + Direct Migrations) | Accepted | 2026-11-05 | Backend & Database |
+| ADR-006 | Guest-First LocalStorage Save with Seamless Nickname Cloud Sync | Accepted | 2026-11-05 | State Management |
+| ADR-007 | Anti-Cheat: Plausibility Envelope & Headless Simulation Replay | Accepted | 2026-11-05 | Security & Fair Play |
+| ADR-008 | Object Pooling, Adaptive 60 FPS Target & Mobile Touch Ergonomics | Accepted | 2026-11-05 | Performance & Mobile |
+| ADR-009 | Daily Challenge Determinism (UTC Date Hash) & Modifiers Rotation | Accepted | 2026-11-05 | Gameplay Systems |
+| ADR-010 | Zero-Dark-Pattern Ethics, Privacy & WCAG 2.1 AA Accessibility | Accepted | 2026-11-05 | Ethics & Accessibility |
 
 ---
 
-## ADR-001: Monorepo Architecture & Technology Stack
+## ADR-001: Single Next.js App Router Structure & Boundary Isolation
 
 ### Context
-KidsMentor requires a tight coupling between child-facing UX, parent dashboards, admin moderation, an async Python AI backend, sandboxed math evaluation, background tasks (digests, spaced repetition), and evaluation suites. We need rapid local development, shared domain types, and unified CI/CD while ensuring high performance and safety.
+Starfall Survivors requires high-performance 2D canvas rendering (Phaser 3), reactive and accessible UI components (HUD, upgrade cards, leaderboards, settings), deterministic headless game logic for balance testing and anti-cheat replay, and serverless API endpoints backed by Neon PostgreSQL.
+A monorepo setup introduces unnecessary toolchain overhead and pnpm workspace symlink complications on Vercel deployments.
 
 ### Decision
-1. **Frontend (`/apps/web`)**: Next.js 14+ (App Router), TypeScript, Tailwind CSS, shadcn/ui components, Framer Motion (reduced motion compliant), next-intl for i18n, KaTeX for math rendering. Mobile-first PWA meeting WCAG 2.1 AA standards.
-2. **Backend (`/apps/api`)**: Python 3.11/3.12 with FastAPI, Pydantic v2 schemas, SQLAlchemy 2.0 (asyncio) + asyncpg/aiosqlite (for dev & testing), Alembic migrations. Sandboxed math service running SymPy.
-3. **Background Worker (`/apps/worker`)**: Redis + Celery/Arq for asynchronous scheduled jobs (weekly digests, spaced repetition scheduling, parent alerts, content embeddings).
-4. **Shared Types (`/packages/shared`)**: Shared JSON schemas, API contracts, curriculum graph definitions, and safety classification rubrics.
-5. **Prompts (`/prompts`)**: Strict versioned system prompts with YAML frontmatter specifying model targets, parameters, and input/output contracts.
-6. **Evals (`/evals`)**: Standalone automated evaluation suite with >= 200 red-team safety cases, Socratic quality tests, SymPy regression tests, and drift monitoring.
-7. **Infrastructure (`/infra`)**: Modular Terraform targeted at AWS `ap-south-1` (Mumbai) for data residency compliance with the Indian DPDP Act 2023.
+We structure the project as a single Next.js (App Router) application with strict boundary isolation:
+1. `/src/sim`: Pure TypeScript deterministic game simulation core. **Strict zero-dependency on Phaser or DOM APIs**. Fully testable in Node/Vitest and executable both in-browser and headless on server/bots.
+2. `/src/game`: Phaser 3 scenes, canvas managers, renderers, sprite textures, particles, camera effects, audio triggers, and input adapters. Loaded client-side only via dynamic imports (`ssr: false`).
+3. `/src/data`: Balancing configs, character definitions, weapon evolutions, passive upgrades, enemy archetypes, wave director budgets, meta-progression tree, and achievements in typed JSON/TS.
+4. `/src/app`: Next.js App Router pages, React HUD, modals (Level-Up, Pause, Game Over, Meta Upgrades, Leaderboard), and API route handlers (`/api/player`, `/api/save`, `/api/daily`, `/api/runs`, `/api/leaderboard`, `/api/report`, `/api/og`).
+5. `/src/db`: Drizzle ORM schema, migrations, connection client, and query helpers.
+6. `/src/lib`: Typed event bus (`EventBus.ts`), guest storage manager, audio engine, rate limiter.
+7. `/scripts`: Automated headless balance simulator (`simulate.ts`) and database seeders.
 
 ### Consequences
-- **Positive**: Clean separation of concerns; deterministic Python math execution in the same backend ecosystem as AI agents; standard modern tooling.
-- **Negative**: Requires polyglot monorepo management (Node/pnpm for web, Python/pip/venv for API/worker). Docker Compose simplifies local setup with a single `make dev` or `docker compose up`.
+- **Positive**: Clean imports, fast build times, easy deployment on Vercel, frictionless sharing of game types and verification logic between client and server.
+- **Negative**: Strict discipline required to prevent Phaser or browser DOM types from leaking into `/src/sim`. Enforced via ESLint boundary rules and CI typecheck.
 
 ---
 
-## ADR-002: Honest AI Persona ("Ollie the Owl") & Anti-Dependency Policy
+## ADR-002: Headless Deterministic Simulation Core (`/src/sim`) & Replay Verification
 
 ### Context
-In an AI-only tutoring environment without human teachers in real time, children can easily develop parasocial attachments, believe the AI is a conscious friend, or rely on it for emotional substitution. Conversely, deceptive anthropomorphism breaches ethical standards and harms emotional development.
+Survivor games rely on escalating enemy counts, precise collision detection, and weapon fire cadences. Without determinism, runs cannot be validated, replays cannot be stored compactly, and headless balance bots cannot evaluate true gameplay conditions.
 
 ### Decision
-1. **Persona**: The tutor is named **Ollie the Owl**, visually styled as a friendly, stylized illustrated owl.
-2. **Explicit Labeling**: Every screen clearly displays an **"AI Tutor"** badge. Voice greetings explicitly declare: *"Hi! I'm Ollie, your AI learning helper."*
-3. **Honesty Contract**:
-   - If a child asks *"Are you real?"* or *"Are you alive?"*, Ollie answers: *"I'm an artificial intelligence computer program made to help you learn! I don't have a body, feelings, or a family like you do, but I love exploring ideas and questions with you."*
-   - Ollie never claims personal memories, school experiences, human emotions, or a physical body.
-   - Ollie replaces *"When I was little..."* with *"In stories..."* or *"Many people find that..."*.
-4. **Anti-Dependency Safeguards**:
-   - Ollie **never** claims to be the child's "best friend".
-   - Ollie **never** uses retention guilt: phrases like *"I'll miss you"*, *"Why did you leave me?"*, or *"Come back soon"* are strictly forbidden and tested in CI evals.
-   - Ollie never encourages secrets from parents. Any request for secrecy is met with: *"I don't keep secrets from parents! Sharing what we learn with your family is one of the best parts of learning."*
-   - Ollie enforces session boundaries (e.g., 20–30 minute caps based on age band) and actively suggests outdoor play, reading real books, and talking to parents.
+1. **Seeded PRNG**: All stochastic logic (spawn positions, upgrade rolls, enemy variant selection, critical hits) derives from a fast, 32-bit deterministic Mulberry32 generator.
+2. **Fixed Timestep**: Simulation logic updates at a fixed 60 ticks per second (16.666 ms tick delta), decoupled from monitor refresh rates (60Hz, 120Hz, 144Hz, or variable mobile displays).
+3. **Delta-Encoded Input Log**: Player movement inputs (angle, velocity magnitude, active directional state) are logged upon change with the corresponding simulation tick number.
+4. **Replay Re-simulation**: A complete 5-minute run produces an input log of only ~5–15 KB compressed. The server or headless bot can re-run the exact simulation given `(seed, character, arena, input_log)` to verify the exact final score, kills, level, and survival duration.
+
+### Consequences
+- **Positive**: Perfect reproducibility for anti-cheat verification, automated balance benchmarking, zero client-server desync, and compact run summaries.
+- **Negative**: Floating point mathematical differences across JS engines (V8 vs JavaScriptCore) must be mitigated by rounding coordinates and damage values to fixed decimal precisions.
 
 ---
 
-## ADR-003: Multi-Agent Orchestration via Explicit State Machine
+## ADR-003: Phaser 3 Client-Only Game Engine with React UI Overlay Bridge
 
 ### Context
-Unconstrained single-prompt LLM execution leads to unpredictable behavior, hallucinations, skipped pedagogical steps, and vulnerability to prompt injection.
+While Phaser 3 is unmatched for 2D sprite rendering, collision quad-trees, particle emitters, and camera shake, its DOM and UI toolsets are cumbersome compared to modern React and Tailwind. Conversely, React is too slow for 60 FPS per-frame sprite updates.
 
 ### Decision
-Implement a deterministic Finite State Machine (FSM) coordinator that governs distinct, specialized agents:
-1. **Tutor Agent**: Socratic dialogue, hint ladder generation, and teach-it-back moderation.
-2. **Planner Agent**: Selects the next objective based on Bayesian mastery state, spaced repetition queues, parent parameters, and time of day.
-3. **Assessor Agent**: Evaluates student submissions against structured rubrics in tandem with deterministic tools.
-4. **Values Coach Agent**: Drives the 4-stage *Story -> Reflect -> Act -> Share* cycle for Life Values.
-5. **Safety Agent**: Intercepts every incoming user token and outgoing agent token. Has absolute veto power to replace output with scripted compassionate fallbacks.
-6. **Parent Insights Agent**: Summarizes structured session telemetry into weekly parent digests and dinner-table conversation starters.
-7. **Content Agent** (Admin-only, offline): Assists content authors in drafting stories and dilemmas; requires mandatory human reviewer approval before publishing.
+We partition presentation responsibilities:
+- **Phaser 3**: Canvas rendering, sprite animations, projectile pools, physics overlap checks, background parallax, particle systems, floating damage numbers, hitstop, and camera shake.
+- **React (Tailwind + Framer Motion)**: HUD overlays (HP bar, XP progress bar, timer, kill counter, active weapon icons), interactive modals (3-choice upgrade card picker, pause menu, death summary, meta-tree shop, leaderboard tables).
+- **Communication Bridge (`EventBus.ts`)**: A strictly typed Event Emitter connects the two layers:
+  - Game -> React: `PLAYER_HP_CHANGED`, `XP_UPDATED`, `LEVEL_UP` (triggers upgrade modal), `BOSS_SPAWNED`, `PLAYER_DIED`, `GAME_WON`, `COMBO_UPDATED`.
+  - React -> Game: `UPGRADE_SELECTED`, `RESUME_GAME`, `PAUSE_GAME`, `RESTART_GAME`, `SET_AUDIO_VOLUME`, `TOGGLE_AUTO_AIM`.
 
-**Inviolable Rule**: Agents NEVER write directly to the database. They return typed tool calls validated by Pydantic; backend deterministic code updates state.
+### Consequences
+- **Positive**: Best-of-both-worlds architecture. Instant reactive UI with full keyboard/screen-reader accessibility, combined with hardware-accelerated WebGL 60 FPS rendering.
+- **Negative**: Requires event synchronization discipline. Game loop must pause simulation updates when a blocking modal (e.g., Level-Up picker) is active.
 
 ---
 
-## ADR-004: Dual-Engine Verification for Maths and Science
+## ADR-004: Procedural Vector/Canvas Texture Pipeline & ZzFX/Web Audio Music
 
 ### Context
-LLMs frequently hallucinate intermediate mathematical calculations, sign errors, or unit conversions. In a tutoring system, presenting an incorrect answer or validating a false equation destroys student trust.
+Traditional sprite assets and uncompressed audio bloat bundle sizes, increase initial load times beyond the 4-second budget on mobile 4G, and introduce third-party licensing ambiguities.
 
 ### Decision
-1. Every mathematical and science equation, equivalence check, or numerical answer MUST be parsed and verified by a deterministic **SymPy** engine running in a sandboxed Python runtime.
-2. **Verification Protocol**:
-   - User inputs answer: `2/4 + 1/4`.
-   - Tutor Agent proposes assessment tool call: `verify_math(expression="2/4 + 1/4", expected="3/4")`.
-   - SymPy evaluates symbolic equality: `simplify(nsimplify(expr) - nsimplify(expected)) == 0`.
-   - The result (`is_correct: True/False`, `canonical_simplification: "3/4"`) is returned to the agent.
-   - The LLM receives the deterministic verdict and crafts the Socratic feedback. The child NEVER sees raw unverified LLM grading.
+1. **Procedural Neon Graphics**:
+   - High-fidelity textures for player ships, weapons, projectiles, enemy drones, XP gems, and bosses are generated at runtime onto cached off-screen HTML5 canvases using geometric neon vector routines with cyan/magenta/amber glows and bloom effects.
+   - Textures are crisp at all DPIs (Retina 2x/3x scale), load in < 50 milliseconds, and result in **0 external image HTTP requests** for core gameplay.
+   - Supplemental CC0 Kenney space assets are used as optional spritesheet themes, verified and documented in `/docs/ASSET_LICENSES.md`.
+2. **Procedural Audio (ZzFX + Web Audio Synth)**:
+   - SFX: Built-in ZzFX micro-synthesizer generating 40+ distinct sound effects (blasters, laser beams, railgun hums, explosive crunches, gem chimes, level-up fanfare, boss warnings, hit-stops) with dynamic pitch scaling.
+   - Adaptive Music: Web Audio API multi-stem cosmic synth engine comprising 4 dynamic stems (Ambient Space Pad, Cosmic Bass Pulse, Fast Cyber Arpeggiator, and Heavy Driving Drums). Stems fade in smoothly as wave intensity rises from minute 1 to the minute 5 boss confrontation.
+
+### Consequences
+- **Positive**: Total game bundle size < 250 KB gzipped. Time-to-first-playable < 2 seconds on 4G. 100% CC0/MIT clean intellectual property.
+- **Negative**: Procedural canvas generation requires initial warm-up on boot (takes ~30ms during preload scene).
 
 ---
 
-## ADR-005: 3-Layer Defense-in-Depth Child Safety & Escalation Pipeline
+## ADR-005: Neon Postgres with Drizzle ORM (Pooled Runtime + Direct Migrations)
 
 ### Context
-Children may disclose distress, bullying, abuse, or self-harm, or encounter jailbreak attempts and inappropriate topics. The system must fail closed, protect the child, and escalate appropriately without acting as a clinician or detective.
+Starfall Survivors requires persistent global leaderboards, daily challenge seeds, player profiles, and telemetry. Vercel runs stateless serverless functions, which can exhaust PostgreSQL connection limits under traffic spikes. Furthermore, Neon compute instances auto-suspend when inactive.
 
 ### Decision
-Three distinct safety checkpoints operate on every turn:
-1. **Layer 1: Fast Heuristic & Regex Filter (< 5ms)**:
-   - Scans for known crisis keywords (suicide, abuse, violence), phone numbers, physical addresses, and adversarial prompt injection strings.
-2. **Layer 2: Dedicated Safety Classifier LLM**:
-   - Classifies message intent across: `SAFE`, `DISTRESS`, `ABUSE_DISCLOSURE`, `BULLYING`, `SEXUAL_CONTENT`, `PII_LEAK`, `PROMPT_INJECTION`.
-3. **Layer 3: Output Appropriateness & Anti-Anthropomorphism Validator**:
-   - Validates that the generated tutor response complies with age vocabulary limits, contains no personal claims, and offers no medical or legal diagnosis.
+1. **Drizzle ORM**: Type-safe, ultra-lightweight SQL query builder with zero runtime overhead.
+2. **Dual Connection Strings**:
+   - `DATABASE_URL` (Runtime): Uses Neon's connection pooler (`-pooler` host) via `@neondatabase/serverless` over WebSockets/HTTPS with connection reuse.
+   - `DATABASE_URL_UNPOOLED` (Migrations & CI): Uses Neon direct connection for `drizzle-kit push` / `drizzle-kit migrate`.
+3. **Cold Start & Resilience Policy**:
+   - API endpoints wrap database queries with automatic retry (2 attempts with exponential backoff) to transparently absorb Neon compute wake-up latency (~1-2 seconds).
+   - If database remains unreachable or user is offline, the client continues in offline mode and queues run submissions in IndexedDB for background synchronization.
 
-**Escalation Policy**:
-- For distress or abuse: Output compassionate scripted reply encouraging talking to a trusted adult; provide national child helpline (Childline 1098 India); trigger an immediate parent alert (unless parent is implicated, in which case route to admin child protection queue); log incident in `SafetyEvent` table.
+### Consequences
+- **Positive**: Infinite scaling on serverless, zero connection exhaustion, preview deployment branch isolation, full offline resilience.
+- **Negative**: Migration tooling requires separate unpooled connection configuration.
 
 ---
 
-## ADR-006: Child Privacy & India DPDP Act 2023 / COPPA Compliance
+## ADR-006: Guest-First LocalStorage Save with Seamless Nickname Cloud Sync
 
 ### Context
-The Digital Personal Data Protection (DPDP) Act 2023 (India) and COPPA (USA) mandate verifiable parental consent, strict data minimization, and prohibition of tracking or behavioral advertising for minors.
+Forcing sign-up or authentication before playing ruins the "instant play in < 5 seconds" promise. Players must be able to click "Play" immediately and retain progress.
 
 ### Decision
-1. **Parent-Only Accounts**: Children NEVER register independently. Accounts belong to parents/guardians with email verification and explicit consent agreement.
-2. **Child Profile Minimization**: Only collects: First name/nickname, age band (6–8, 9–12, 13–16), grade, educational board (CBSE, ICSE, State, IB), language preference, and learning interests. **Never** collect child email, phone number, school name, or residential address.
-3. **Child Authentication**: Child logs in via parent-configured 4-digit numeric PIN, animal emoji combination, or secure QR/magic link.
-4. **Third-Party AI Vendor Terms**: PII detector redacts any incidental names/locations before sending prompts to LLM APIs. Enterprise zero-data-retention and no-training agreements are enforced.
-5. **Data Sovereignty**: Database and hosting located in AWS `ap-south-1` (Mumbai). Full one-click data export and permanent deletion API for parents.
+1. **Primary Guest Storage**: All run histories, meta-progression Stardust, character unlocks, and settings persist locally in `localStorage` / `IndexedDB`.
+2. **Anonymous Cryptographic Token**: On first visit, a lightweight anonymous player UUID is generated and signed with HMAC in an httpOnly cookie.
+3. **Cloud Sync on Nickname Claim**: When the player decides to enter a nickname for the leaderboard, their local save is linked to their Neon database record.
+4. **Data Ownership**: A "Clear All Data" and "Export Save" button in Settings gives users total autonomy over their data, complying with DPDP and GDPR data minimization.
+
+### Consequences
+- **Positive**: Zero barriers to entry; 100% playable offline or in airplane mode; seamless transition from guest to competitive leaderboard player.
+- **Negative**: Clearing browser cookies/cache as an anonymous guest clears progress unless synced with a nickname. Clearly communicated via in-game tooltip.
 
 ---
 
-## ADR-007: Curriculum Graph & Bayesian Knowledge Tracing Engine
+## ADR-007: Anti-Cheat: Plausibility Envelope & Headless Simulation Replay
 
 ### Context
-To deliver true personalized tutoring, the system needs an objective representation of skills, prerequisites, and mastery probabilities.
+Client-side web games are vulnerable to memory modification, modified JavaScript bundles, and spoofed HTTP requests submitting impossible high scores.
 
 ### Decision
-1. **Curriculum Graph**: Seeded via JSON/YAML for CBSE/NCERT Maths (Classes 4, 6) and Science (Class 8).
-2. **Mastery Tracking**: Bayesian Knowledge Tracing (BKT) tracking four parameters per skill:
-   - $P(L_0)$: Initial prior knowledge
-   - $P(T)$: Probability of learning transition
-   - $P(G)$: Probability of guess
-   - $P(S)$: Probability of slip
-3. **Spaced Repetition**: Modified SM-2 algorithm scheduling review activities at expanding intervals (1 day, 3 days, 7 days, 21 days).
-4. **Misconception Catalog**: Standard misconceptions (e.g., "multiplying always makes numbers bigger", "heavy objects fall faster") are indexed and triggered for targeted counter-examples.
+A pragmatic, serverless-friendly three-layer defense:
+1. **Plausibility Envelope**: Incoming run submissions (`/api/runs`) undergo fast statutory checks:
+   - Survival duration vs game timer match.
+   - Max theoretical DPS calculation: kills * avg enemy HP cannot exceed maximum possible weapon damage for the submitted build.
+   - Level reached must match XP required for submitted upgrade count.
+   - Client version hash must match current production release.
+2. **Input Log Hash & Signature**: Submissions include a compact delta-encoded input log and HMAC digest signed by the session token.
+3. **Headless Re-Simulation**: Top 10 leaderboard submissions and flagged suspect runs are queued for headless re-simulation using the identical pure TypeScript simulation engine (`/src/sim`). If the simulated outcome deviates beyond acceptable tolerance, the run is flagged as unverified and excluded from public boards.
+
+### Consequences
+- **Positive**: Protects leaderboard integrity without requiring expensive authoritative dedicated game servers.
+- **Negative**: Highly sophisticated bots playing at human speeds could potentially pass plausibility checks; addressed by public reporting tools and admin moderation flags.
 
 ---
 
-## ADR-008: Flagship Life Values & Ethics 4-Stage Engine
+## ADR-008: Object Pooling, Adaptive 60 FPS Target & Mobile Touch Ergonomics
 
 ### Context
-Values cannot be taught through passive lectures or multiple-choice quizzes. They require reflection and concrete real-world practice with real human beings.
+Spawning hundreds of enemies, bullets, gems, and floating text instances per second causes frequent JavaScript garbage collection pauses, leading to frame drops ("jank") on mobile devices.
 
 ### Decision
-The curriculum encompasses 12 core modules:
-1. Gratitude, 2. Kindness, 3. Honesty, 4. Empathy, 5. Responsibility, 6. Respect, 7. Perseverance, 8. Courage, 9. Sharing, 10. Care for Environment, 11. Digital Citizenship & Online Safety, 12. Handling Anger & Peer Pressure.
+1. **Object Pooling**: Pre-allocated pools for:
+   - Projectiles (500 instances)
+   - Enemies (300 instances)
+   - XP Gems & Stardust (400 instances)
+   - Floating Damage Numbers (150 instances)
+   - Particle Bursts (300 instances)
+   Zero heap allocations during the active game update loop.
+2. **Adaptive Quality Controller**:
+   - The game continuously samples rolling frame times over 60 frames.
+   - If average FPS drops below 50 for > 2 seconds, particle caps are dynamically halved, screen shake intensity is reduced, and background nebula shader passes are simplified.
+3. **Mobile Touch Ergonomics**:
+   - Dynamic floating virtual joystick on the left half of the screen (appears wherever the left thumb touches).
+   - Optional Auto-Aim assist enabled by default on touch viewports (aims at closest high-threat target).
+   - Safe-area inset handling (`viewport-fit=cover`) for iPhone notches and Android navigation bars.
 
-Each module follows the **Story -> Reflect -> Act -> Share** pedagogical cycle:
-- **Story**: Engaging, culturally inclusive narrative from educator-approved content.
-- **Reflect**: Socratic dialogue exploring ethical dilemmas without moralizing or lecturing.
-- **Act (Real-Life Mission)**: Mandatory offline mission with family, classmates, or community (e.g., *"Help someone with chores without being asked"*).
-- **Share**: Child logs reflection (text, voice, or drawing). Successful completion earns a seed that blossoms in their personal **Character Garden**.
+### Consequences
+- **Positive**: Consistent 60 FPS on low-to-mid range mobile hardware; zero GC stutter; effortless one-thumb mobile playability.
+- **Negative**: Pool management requires disciplined entity reset routines on spawn/despawn.
 
 ---
 
-## ADR-009: Multimodal & Multilingual Strategy (English, Hindi, Telugu)
+## ADR-009: Daily Challenge Determinism (UTC Date Hash) & Modifiers Rotation
 
 ### Context
-India's learners often understand spoken concepts better in their native tongue while retaining scientific and mathematical terms in English (e.g., "Force", "Fractions", "Photosynthesis").
+A core driver of player retention is a shared daily competition where all players face the exact same arena, enemy sequence, and gameplay twist.
 
 ### Decision
-1. **Languages**: Full launch support for English, Hindi (हिन्दी), and Telugu (తెలుగు).
-2. **Code-Mixing Policy**: Explanations, analogies, and encouragement match the chosen language; technical scientific terms remain standard in English for academic rigor.
-3. **Voice Pipeline**:
-   - Browser Web Speech API for low-latency client-side speech recognition and synthesis.
-   - Server-side fallback (Whisper API / Edge TTS / Piper) for unsupported browsers.
-   - Push-to-talk button + streaming audio with barge-in interruption capability.
-4. **Vision/Upload**: Photos of homework or notebook sketches are processed via vision LLM. Input images are marked strictly as untrusted data with strict OCR filtering to prevent prompt injection.
+1. **Daily Seed Generation**: The daily seed is computed deterministically from `hash("starfall-daily-" + YYYY-MM-DD)`.
+2. **Rotating Modifiers**: Each day pairs two modifiers from a data-driven pool:
+   - *Hyperdrive*: +50% player and enemy movement speed.
+   - *Glass Reactor*: +200% player damage, but player HP capped at 25%.
+   - *Solar Storm*: 2x enemy spawn frequency, 2x XP gem values.
+   - *Heavy Ordnance*: -30% attack speed, +150% area of effect and knockback.
+   - *Void Magnet*: XP gems naturally drift toward player; no health drops.
+3. **One Ranked Attempt**: Players get 1 official ranked submission per UTC day to prevent grinding until lucky. Unlimited unranked "Practice Runs" are permitted.
+
+### Consequences
+- **Positive**: Daily viral replayability, community discussion, and fair competition.
+- **Negative**: Timezone coordination requires strict adherence to UTC midnight resets.
 
 ---
 
-## ADR-010: Model Provider Layer, Caching, Token Budgets & Kill Switches
+## ADR-010: Zero-Dark-Pattern Ethics, Privacy & WCAG 2.1 AA Accessibility
 
 ### Context
-High concurrency with LLMs can lead to exorbitant costs, latency spikes, and provider outages. Robust operations require provider abstraction and automated safeguards.
+Modern web gaming is plagued by predatory monetization, forced ads, cookie walls, and accessibility barriers for players with disabilities.
 
 ### Decision
-1. **Model Layer**: Provider-agnostic interface (`LLMProvider`) supporting Anthropic Claude (default primary), Google Gemini (high-throughput fallback), and OpenAI. Configured entirely via environment variables.
-2. **Tiered Routing**:
-   - *High-Reasoning Tasks* (Socratic Tutoring, Story Reflection): Claude 3.5 Sonnet / GPT-4o.
-   - *Fast/Heuristic Tasks* (Assessor rubric matching, Safety classification): Claude 3.5 Haiku / GPT-4o-mini.
-3. **Cost Controls**:
-   - System prompt caching on recurring sessions.
-   - Maximum token budgets enforced per turn (max 250 tokens for age 6–8; max 450 tokens for 13–16).
-   - Redis-backed rate limiting per child session.
-4. **Global Kill Switch**: Redis feature flag `KILL_SWITCH_AI_ALL` allows instant cutoff of AI endpoints in case of unexpected provider anomaly, falling back to pre-authored static revision cards and interactive quizzes.
+1. **Ethics**:
+   - No advertisements, no pay-to-win, no loot boxes, no countdown timers blocking play.
+   - No manipulative push notifications or forced social sharing.
+2. **Privacy**:
+   - Zero third-party ad trackers.
+   - Anonymous nicknames only (sanitized by profanity filter). No email or password required to compete.
+3. **Accessibility**:
+   - **Photosensitivity**: Flashes are strictly clamped below 3 Hz; "Reduced Flash" and "Reduced Motion" toggles in Settings disable screen shake and white hit flashes.
+   - **Color-Blind Modes**: High-contrast, Protanopia, Deuteranopia, and Tritanopia color palettes for enemy hazards and XP pickups.
+   - **Input Flexibility**: Full keyboard (WASD / Arrows), Gamepad (Standard API), and Touch controls with customizable sensitivity and rebinding.
 
----
-
-## Running List of Human Decisions Needed
-
-The following items are outside the autonomous software build scope and require human stakeholder sign-off prior to commercial production launch:
-
-1. **Verifiable Parental Consent Method (DPDP 2023)**: Selection of approved verification provider (e.g., DigiLocker, Aadhaar OTP token, or ₹1 refundable credit card authorization) once central rules under DPDP Act 2023 are fully notified.
-2. **Educator & Child-Psychologist Content Sign-Off**: Human panel review of all 12 Life Values modules, dilemma scenarios, and age-band grading rubrics (pre-seeded content is marked `STATUS: NEEDS_REVIEW`).
-3. **Production API Keys & Tier Limits**: Procurement of dedicated enterprise Anthropic/OpenAI/Google API keys with explicit zero-data-retention / BAA agreements.
-4. **Payment Gateway Merchant Verification**: Production Razorpay & Stripe merchant onboarding (KYC for India and international parent subscriptions).
-### ADR-011: Web Frontend Architecture (Next.js 14, Web Speech Barge-In, KaTeX, HTML5 Whiteboard)
-- **Status**: Accepted
-- **Context**: The tutoring experience requires low latency, rich mathematical formatting, child-friendly drawing, and voice input with interruptibility.
-- **Decision**: Next.js 14 App Router with Tailwind CSS. Math formulas render via KaTeX stylesheet. The whiteboard canvas uses native HTML5 Canvas 2D context exportable to data URLs. Voice input uses Web Speech Recognition API with automatic interruption (barge-in cancelling `window.speechSynthesis` when the child speaks).
-- **Consequences**: Zero heavy third-party canvas or voice plugins needed; works smoothly on mobile tablets and desktops.
-
-### ADR-012: Production Infrastructure & India Data Residency (AWS Mumbai ap-south-1)
-- **Status**: Accepted
-- **Context**: DPDP Act 2023 mandates secure local data handling and rigorous data minimization for minors' data.
-- **Decision**: All cloud infrastructure is provisioned in AWS `ap-south-1` (Mumbai) using modular Terraform. RDS PostgreSQL 16 is encrypted with KMS at rest with 30-day point-in-time recovery. S3 media storage enforces an automatic 24-hour expiration lifecycle rule for ephemeral homework photos and voice clips.
-- **Consequences**: Guarantees full data residency and statutory compliance within Indian borders.
-
----
-
-## 3. Running List of Human Decisions Needed
-
-1. **Enterprise LLM Terms of Service**: Final execution of Zero-Data-Retention (ZDR) contractual addendum with Anthropic PBC for commercial production traffic.
-2. **Pedagogical Content Sign-off**: Formal educator review panel approval of all 12 Life Values module stories, dilemmas, and missions via the Admin Review Queue (`/admin`).
-3. **Emergency Escalation Routing**: Production SMS/Email webhook endpoints for real-time dispatch of Childline India (1098) crisis incidents.
-4. **Merchant / Billing Gate**: Selection of payment gateway (Razorpay / Stripe India) for parent subscription tiers.
-5. **Domain & DNS**: Allocation of official domain name (e.g., `kidsmentor.in`) and SSL certificate issuance in AWS Route 53.
+### Consequences
+- **Positive**: Universally accessible, ethical, privacy-respecting title suitable for all ages and regulatory compliance worldwide.
+- **Negative**: Zero ad revenue model; success measured purely on player engagement, retention, and community enjoyment.

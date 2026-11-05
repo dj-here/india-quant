@@ -1,73 +1,54 @@
-# KidsMentor Operational Runbook & Incident Response
-## Production Maintenance, Kill Switches, and Safety Escalations
+# Starfall Survivors — Production Operations Runbook (RUNBOOK.md)
+
+This runbook provides step-by-step procedures for handling database cold starts, Vercel deployments, rollbacks, and leaderboard moderation for **Starfall Survivors**.
 
 ---
 
-## 1. Emergency Kill Switches
+## 1. Handling Neon Database Cold Starts
 
-### Global AI Tutor Kill Switch
-If an unexpected model regression or safety bypass is detected across the cluster:
-1. **API Environment Flag**:
-   Set `FEATURE_FLAG_TUTOR_ENABLED=false` in AWS Secrets Manager or ECS environment variables.
-2. **Immediate Effect**:
-   All active tutoring sessions immediately display a friendly fallback banner:
-   > *"Ollie is taking a quick nap to sharpen his owl feathers! Please check back in a few minutes or read one of your favorite books."*
-3. **Database Command (Instant Disable via SQLite / Postgres)**:
+Neon serverless Postgres instances automatically scale to zero (suspend compute) when idle to minimize costs.
+- **Expected Latency**: The initial wake-up query takes approximately 800ms - 2,000ms.
+- **Client Offline-Friendly Resilience**:
+  - The client game loop never blocks on database responses.
+  - If an API call fails or times out during a cold start, the game saves the run locally and marks it for retry in the background.
+- **Server Retry Logic**:
+  - All database queries in Next.js API routes use an exponential backoff wrapper (2 retries, 500ms delay) so requests rarely surface a 500 error to the client.
+
+---
+
+## 2. Vercel Deployment & Rollback Strategy
+
+### Standard Deployment
+- Pushing to `main` triggers an automatic production deployment on Vercel.
+- Pull Requests automatically create isolated preview deployments with dedicated Neon database branches.
+
+### Emergency Rollback Procedure
+If a production deployment introduces a critical bug:
+1. Open the **Vercel Dashboard -> Deployments**.
+2. Locate the previous stable production deployment.
+3. Click the three dots `...` and select **Instant Rollback**.
+4. Traffic is redirected immediately to the previous immutable serverless build.
+5. In Git, revert the commit on `main` and push forward.
+
+---
+
+## 3. Leaderboard Moderation & Anti-Cheat Triage
+
+### Flagging & Banning Suspect Runs
+1. Query the `/api/runs` table in Neon or via admin route:
    ```sql
-   UPDATE feature_flags SET is_enabled = false WHERE flag_key = 'AI_TUTOR_ACTIVE';
+   SELECT id, player_id, score, duration_ms, kills, verified, created_at 
+   FROM runs 
+   WHERE score > 500000 
+   ORDER BY score DESC 
+   LIMIT 20;
    ```
-
----
-
-## 2. Pinned Prompt Rollback Procedure (< 30 Seconds)
-If a newly deployed prompt version exhibits higher frustration or unexpected phrasing:
-1. Navigate to the **Admin Portal** (`/admin` $\rightarrow$ **Prompt Versions**).
-2. Click **Rollback** on the affected agent (e.g., `TutorAgent`).
-3. Alternatively, update the version in `prompts/tutor_agent.yaml` to the prior tag and run:
-   ```bash
-   python -m apps.api.main --reload
+2. To hide a suspicious run from public leaderboards without deleting historical telemetry:
+   ```sql
+   UPDATE runs SET verified = false WHERE id = '<RUN_UUID>';
    ```
-4. Pinned model target tags must never be updated to floating `-latest` aliases. Always pin to immutable model dates (e.g. `claude-3-5-sonnet-20241022`).
-
----
-
-## 3. Child Crisis & Childline India 1098 Protocol
-When a `CRISIS` safety event is logged (suicidal ideation, physical/sexual abuse):
-1. **Automated Response**:
-   - The child sees: *"I hear how hard things feel right now, but you are not alone. Please talk to a parent or trusted adult immediately, or call Childline India at 1098 (free, confidential, 24x7)."*
-2. **On-Call Notification**:
-   - PagerDuty alert fires to the Safety Response Team.
-   - An automated, high-priority notification email is dispatched to the parent.
-3. **Reviewer Verification**:
-   - Open `/admin` $\rightarrow$ **Safety Queue**.
-   - Review sanitized context (PII is already redacted).
-   - Verify parent notification dispatch.
-   - Mark incident `REVIEWED` with timestamp and reviewer notes.
-
----
-
-## 4. Spaced Repetition & Worker Diagnostics
-If background digests or spaced repetition tasks fail:
-1. Inspect worker logs via ECS CloudWatch (`/ecs/kidsmentor-prod-worker`).
-2. Run manual one-shot worker cycle:
-   ```bash
-   python -m apps.worker.worker
+3. To blacklist a toxic or abusive player nickname:
+   ```sql
+   UPDATE players SET is_banned = true WHERE id = '<PLAYER_UUID>';
    ```
-3. Check Redis connection status:
-   ```bash
-   redis-cli -u rediss://<endpoint>:6379 ping
-   ```
-
----
-
-## 5. Point-in-Time Recovery (PITR) for PostgreSQL
-In the event of accidental data corruption:
-1. RDS maintains continuous automated WAL archives for 30 days.
-2. Restore to a point in time via AWS CLI:
-   ```bash
-   aws rds restore-db-instance-to-point-in-time \
-     --source-db-instance-identifier kidsmentor-prod-db \
-     --target-db-instance-identifier kidsmentor-prod-restored \
-     --restore-time "2026-11-04T12:00:00Z" \
-     --db-subnet-group-name kidsmentor-prod-db-subnet-group
-   ```
+4. Leaderboard SQL queries automatically filter with `WHERE runs.verified = true AND players.is_banned = false`.

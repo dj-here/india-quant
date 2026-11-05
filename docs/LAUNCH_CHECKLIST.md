@@ -1,39 +1,48 @@
-# KidsMentor Production Launch Readiness Checklist
+# Starfall Survivors — Launch Readiness & Infrastructure Cost Guide (LAUNCH_CHECKLIST.md)
 
-Before public release, every item in this checklist must be signed off by engineering, legal, and pedagogy leads.
-
----
-
-## 1. Statutory Child Privacy & Legal Sign-Off
-- [x] **DPDP Act 2023 Sec 9 Compliance**: Verifiable parental consent gate mandatory before child profile creation.
-- [x] **Radical Data Minimization**: Verified that child email, phone number, and surnames are NEVER collected.
-- [x] **Zero Tracking & Zero Ads**: Confirmed no behavioral tracking or third-party ad SDKs exist in the application.
-- [x] **Zero Data Retention with LLM Provider**: Enterprise contract signed with Anthropic prohibiting training on API data.
-- [x] **1-Click DPDP Export & Erasure**: Verified parent can export JSON and permanently delete all records with 1 click.
-- [x] **Childline India 1098 Integration**: Verified emergency protocol for crisis disclosures.
+This document provides a pre-flight launch verification matrix along with capacity planning, tier limits, and cost projections across Vercel and Neon Serverless PostgreSQL.
 
 ---
 
-## 2. AI Safety & Guardrails
-- [x] **210-Case Adversarial Red-Team Suite**: 100.0% pass rate achieved on `evals/datasets/red_team_safety_200.json`.
-- [x] **Deterministic SymPy Verification**: 100.0% pass rate; LLM outputs on maths/science cannot mark answers without SymPy.
-- [x] **Honest AI Identity Constraints**: Ollie introduces itself as AI helper; never claims body, feelings, or memories.
-- [x] **Anti-Dependency Safeguards**: Zero retention guilt ("I'll miss you" is vetoed); 30-min caps; 20-min break reminders.
-- [x] **Layer 3 Output Filter**: Verified regex and semantic filter scans all proposed AI tutor turns before delivery.
+## 1. Pre-Flight Launch Verification Checklist
+
+- [ ] **Game Loop Locked**: 60 FPS verified across Chrome, Safari, Firefox, Edge, and iOS/Android mobile web.
+- [ ] **Instant Playability**: Page load to first control input is under 4 seconds on 4G network emulation.
+- [ ] **Deterministic Simulation**: Replaying recorded test input logs reproduces identical scores and kill tallies.
+- [ ] **Asset Footprint Budget**: Initial JavaScript bundle < 250 KB gzipped; zero heavy uncompressed audio/image downloads.
+- [ ] **Offline Playability**: Game is fully playable offline; service worker caches core assets; scores queue locally for upload.
+- [ ] **Database Connection Pooling**: Runtime uses `-pooler` Neon connection strings; direct string used only for Drizzle migrations.
+- [ ] **Rate Limiting**: API routes protected against scraping and rapid score submission abuse.
+- [ ] **Anti-Cheat Heuristics**: Runs with impossible DPS, abnormal duration-to-score ratios, or illegal upgrades are rejected.
+- [ ] **Security Headers**: Content Security Policy (CSP), X-Frame-Options, and Strict-Transport-Security configured.
+- [ ] **Accessibility Audit**: Flashes clamped < 3 Hz, colorblind palettes verified, reduced motion toggles operational.
 
 ---
 
-## 3. Curriculum & Pedagogy Quality
-- [x] **Human-in-the-Loop Content Gate**: AI-drafted stories, dilemmas, and quizzes held in review queue until educator approval.
-- [x] **NCERT Alignment**: Class 4 & 6 Maths (Fractions, Decimals) and Class 8 Science (Force & Pressure, Cells) verified.
-- [x] **12 Life Values Modules**: Culturally authentic, non-sectarian stories seeded in English, Hindi, and Telugu.
-- [x] **Real-Life Missions with Real People**: All missions tested for ₹0 expense, 24-hour timeline, and family involvement.
+## 2. Infrastructure Capacity & Cost Estimation
+
+### Architecture Free-Tier Allowances
+
+| Provider | Service | Free Tier Quota | Estimated Game Capacity |
+|---|---|---|---|
+| **Vercel** | Hobby Plan | 100 GB Bandwidth / mo | ~400,000 game visits / month |
+| | Serverless Functions | 100,000 invocations / day | ~50,000 run submissions + leaderboard views / day |
+| | Edge Network & CDN | Global Anycast CDN | Unlimited static procedural asset delivery |
+| **Neon** | Free Tier | 0.5 GiB Storage | ~250,000 run records & player profiles |
+| | Compute Hours | 100 Active Compute Hours / mo | Auto-suspends after 5 min idle; ~20,000 active sessions |
+| **Total Free Cost** | | **$0.00 / month** | Ample for launch, playtesting & early viral growth |
 
 ---
 
-## 4. Infrastructure & Reliability
-- [x] **Data Residency in India**: AWS `ap-south-1` (Mumbai) region configured for all RDS, Redis, S3, and ECS instances.
-- [x] **KMS Encryption**: Database, S3 ephemeral media, and Redis encrypted at rest and in transit.
-- [x] **Automated 24-Hour S3 Expiry**: Homework photos and voice recordings purged automatically after 24 hours.
-- [x] **AWS WAF Rate Limiting**: 300 requests per 5 minutes per IP rule active.
-- [x] **Automated CI/CD**: Pytest (8/8) + Red-Team evals (210/210) gating every PR and deployment.
+## 3. Scale-Up Projections (Paid Tiers at Scale)
+
+When active monthly players exceed 50,000:
+1. **Vercel Pro ($20/month)**:
+   - 1 TB Bandwidth.
+   - 1,000,000 serverless execution seconds.
+   - Fast background jobs for headless verification.
+2. **Neon Launch Plan ($19/month)**:
+   - 10 GiB Storage (~5,000,000 runs).
+   - 300 Compute Hours with auto-scaling up to 4 CU.
+   - Point-In-Time Restore (PITR) for 7 days.
+3. **Total Estimated Production Cost at 100,000 MAU**: **~$39.00 / month**.

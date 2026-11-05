@@ -1,61 +1,128 @@
-# KidsMentor Curriculum & Pedagogy Content Guide
-## Standards for Educator & Child Psychologist Review Panel
+# Starfall Survivors — Content Authoring Guide (CONTENT_GUIDE.md)
 
-### Mission
-KidsMentor pairs rigorous, standards-aligned STEM education (NCERT Classes 1–10) with our flagship **Life Values & Ethics** curriculum. Because AI is the only instructor, all materials in the shared content library must be reviewed and approved by human educators (Principle 5).
+This handbook explains how to add or modify characters, weapons, evolutions, passives, enemies, bosses, arenas, wave curves, and achievements in **Starfall Survivors** via purely data-driven TypeScript/JSON structures without altering core engine or simulation code.
 
 ---
 
-## 1. Flagship Life Values & Ethics Track
+## 1. Directory Structure for Content
 
-### The 12 Core Values Modules
-1. **Gratitude** (Sunflower): Recognizing everyday kindness, family sacrifices, and nature's gifts.
-2. **Kindness** (Lotus): Proactive small acts of compassion toward peers, helpers, animals, and elders.
-3. **Honesty** (Bamboo): Truthfulness, acknowledging mistakes without fear, and integrity in play.
-4. **Empathy** (Orchid): Perspective-taking; imagining how another person feels without judging.
-5. **Responsibility** (Banyan): Ownership of one's belongings, chores, homework, and commitments.
-6. **Respect** (Rose): Honoring elders, appreciating differing points of view, and politeness.
-7. **Perseverance** (Pine): Grit; viewing mistakes as learning opportunities; not giving up on tough puzzles.
-8. **Courage** (Hibiscus): Moral bravery; standing up for a friend being teased; trying new things.
-9. **Sharing** (Grapevine): Generosity; taking turns; sharing knowledge and snacks fairly.
-10. **Care for Environment** (Neem): Water conservation, waste segregation, protecting trees and animals.
-11. **Digital Citizenship & Online Safety** (Aloe): Privacy, avoiding strangers online, reporting bullying, screen balance.
-12. **Handling Anger & Peer Pressure** (Tulsi): Deep breathing, emotional regulation, resisting dares, self-respect.
-
-### The 4-Stage Pedagogy Specification
-Every values module must follow this structured cycle:
-1. **Stage 1: Story (Age-Banded & Culturally Authentic)**
-   - Must be available in English, Hindi, and Telugu.
-   - Grounded in authentic Indian scenarios (school tiffin breaks, neighborhood games, local festivals) or universal folk traditions (Panchatantra, Jataka, Aesop).
-   - Zero dogmatic or sectarian religious instruction.
-2. **Stage 2: Reflect (Socratic Moral Dilemma)**
-   - Ollie asks open-ended questions.
-   - **Never moralize or shame**: Ollie does not say *"You should always do X"*. Instead: *"What do you think made Amit feel nervous? What would you do in his shoes?"*
-3. **Stage 3: Act (Real-Life Mission)**
-   - **Must involve REAL PEOPLE**: family, friends, neighbors, or nature.
-   - Safe for children to perform without adult supervision, or explicitly noting *"Ask a parent to help you with this!"*
-   - Strictly ₹0 financial expense. Doable within 24 hours.
-4. **Stage 4: Share (Reflection & Character Garden)**
-   - Child records reflection via text, voice clip, or whiteboard drawing.
-   - Ollie praises effort, persistence, and thoughtfulness.
-   - The corresponding plant advances from Seed $\rightarrow$ Sprout $\rightarrow$ Budding $\rightarrow$ Radiant Flower.
+All game content resides strictly within `/src/data/`:
+```
+src/data/
+├── characters.ts     # Playable ship classes & passive bonuses
+├── weapons.ts        # Weapons, upgrades, stats & evolution recipes
+├── passives.ts       # 12 passive stat modifiers
+├── enemies.ts        # Enemy stats, movement AI archetypes & bosses
+├── arenas.ts         # Arenas, hazards, palettes & ambient modifiers
+├── waves.ts          # Minute-by-minute spawn director budget curves
+├── metaTree.ts       # Persistent Stardust progression skill tree (25 nodes)
+├── achievements.ts   # 30 unlockable achievements and cosmetics
+└── dailyModifiers.ts # Daily challenge mutators
+```
 
 ---
 
-## 2. Academic STEM Curriculum Standards
+## 2. Adding a New Weapon & Evolution Recipe
 
-### NCERT/CBSE Alignment
-- **Classes 4 & 6 Mathematics**:
-  - Fractions (representations, equivalent fractions, adding unlike denominators using LCM).
-  - Decimals, Ratios, Number Patterns.
-  - Geometry (Perimeter and Area of 2D shapes).
-- **Class 8 Science**:
-  - **Physics**: Force and Pressure ($P = F / A$, atmospheric pressure, surface area vs pressure), Friction.
-  - **Biology**: Cell Structure and Functions (Plant vs Animal cells, organelles, microscope basics).
+Weapons are defined in `src/data/weapons.ts`. Each weapon has 5 standard levels. At level 5, if the player also holds the matching passive item, the weapon transforms into its **Evolved Form** upon the next level-up chest or card choice.
 
-### Socratic Hint Ladder Rules
-Instructors reviewing quiz and practice activities must ensure prompts adhere to our 4-turn ladder:
-- **Turn 1 (Nudge)**: Conceptual question or intuitive analogy (e.g. pizza slices).
-- **Turn 2 (Next Step)**: Isolates the immediate calculation (e.g. *"What is the LCM of 3 and 4?"*).
-- **Turn 3 (Worked Example)**: Shows an identical problem with different numbers.
-- **Turn 4 (Full Solution)**: Provided only after genuine effort has been logged.
+### Example Weapon Definition
+```typescript
+export interface WeaponLevelConfig {
+  damage: number;
+  cooldownMs: number;
+  projectilesCount: number;
+  speed: number;
+  areaMultiplier: number;
+  pierce: number;
+  durationMs?: number;
+  description: string;
+}
+
+export interface WeaponDef {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  category: "projectile" | "beam" | "orbit" | "area" | "chain";
+  baseCooldown: number;
+  levels: WeaponLevelConfig[];
+  evolutionRecipe?: {
+    requiredPassiveId: string;
+    evolvedWeaponId: string;
+    description: string;
+  };
+}
+```
+
+---
+
+## 3. Adding a New Enemy or Boss
+
+Enemies are defined in `src/data/enemies.ts`:
+```typescript
+export type EnemyBehavior = 
+  | "chase"      // Moves directly toward player
+  | "swarm"      // Uses flocking separation & cohesion
+  | "charge"     // Telecasts attack, then rushes in straight line
+  | "ranged"     // Keeps standoff distance and shoots projectiles
+  | "splitter"   // Spawns 2 child enemies upon destruction
+  | "summoner"   // Periodically summons minion waves
+  | "boss";      // Multi-phase scripted attack pattern
+
+export interface EnemyDef {
+  id: string;
+  name: string;
+  hp: number;
+  speed: number;
+  damage: number;
+  xpValue: number;
+  stardustDropChance: number;
+  spriteKey: string;
+  behavior: EnemyBehavior;
+  radius: number;
+  shootCooldownMs?: number;
+  chargeCooldownMs?: number;
+  tintColor: number;
+}
+```
+
+---
+
+## 4. Modifying the Spawn Director Curve
+
+Wave progression is defined in `src/data/waves.ts`. The Spawn Director operates on a **Spawn Budget** system:
+```typescript
+export interface WaveInterval {
+  startSec: number;
+  endSec: number;
+  budgetPerSec: number; // Maximum spawn points consumed per second
+  allowedEnemies: { enemyId: string; weight: number }[];
+  isBreathingRoom?: boolean; // Halves enemy aggression for 10-15s
+  event?: "swarm_rush" | "elite_ambush" | "boss_spawn";
+  bossId?: string;
+}
+```
+
+---
+
+## 5. Adding Meta-Progression Nodes
+
+Permanent upgrades are defined in `src/data/metaTree.ts`. Each node costs persistent Stardust:
+```typescript
+export interface MetaNodeDef {
+  id: string;
+  title: string;
+  description: string;
+  category: "offense" | "defense" | "utility" | "special";
+  maxRank: number;
+  baseCost: number;
+  costMultiplier: number; // cost = baseCost * (costMultiplier ^ currentRank)
+  statModifier: {
+    stat: "damage" | "hp" | "speed" | "cooldown" | "magnet" | "stardustBonus" | "revival";
+    valuePerRank: number;
+  };
+  requiresNodeId?: string;
+  icon: string;
+}
+```
