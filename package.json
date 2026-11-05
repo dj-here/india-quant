@@ -1,34 +1,12 @@
 {
-  "name": "campusedge-platform",
+  "name": "kidsmentor",
   "version": "1.0.0",
   "private": true,
-  "description": "CampusEdge Institutional Training & Placement Platform",
-  "workspaces": [
-    "packages/*",
-    "apps/*"
-  ],
+  "description": "KidsMentor - 1-on-1 AI Tutoring Platform for Kids (Ages 6-16)",
   "scripts": {
-    "dev": "pnpm --filter @campusedge/web dev",
-    "build": "pnpm --filter @pawstay/db generate && pnpm --filter @pawstay/db build && pnpm --filter @campusedge/web build",
-    "start": "pnpm --filter @campusedge/web start",
-    "test": "vitest run",
-    "test:e2e": "playwright test",
-    "lint": "pnpm --recursive lint",
-    "typecheck": "tsc --noEmit",
-    "format": "prettier --write \"**/*.{ts,tsx,md,json}\"",
-    "db:generate": "pnpm --filter @pawstay/db generate",
-    "db:push": "pnpm --filter @pawstay/db push",
-    "db:seed": "node packages/db/dist/seed.js",
-    "clean": "pnpm --recursive exec rm -rf node_modules .turbo dist .next",
+    "dev": "cd apps/web && npm run dev",
+    "build": "cd apps/web && npm run build",
+    "start": "cd apps/web && npm run start",
     "postinstall": "node scripts/patch-next-node.js"
-  },
-  "devDependencies": {
-    "@playwright/test": "^1.64.1",
-    "@types/node": "^20.11.24",
-    "@vitest/coverage-v8": "2.1.9",
-    "prettier": "^3.2.5",
-    "typescript": "^5.3.3",
-    "vitest": "^2.1.9"
-  },
-  "packageManager": "pnpm@12.15.0"
+  }
 }

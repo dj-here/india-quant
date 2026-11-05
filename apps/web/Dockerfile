@@ -10,14 +10,12 @@ RUN apk add --no-cache libc6-compat
 FROM base AS deps
 COPY package.json package-lock.json* ./
 COPY apps/web/package.json ./apps/web/
-COPY packages/shared/package.json ./packages/shared/
 
 RUN npm install --prefix apps/web
 
 # --- Builder Stage ---
 FROM base AS builder
 COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
-COPY packages/ ./packages/
 COPY apps/web/ ./apps/web/
 COPY tsconfig.json* ./
 
