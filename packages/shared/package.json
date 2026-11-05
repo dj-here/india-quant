@@ -1,75 +1,8 @@
 {
-  "name": "@pawstay/shared",
+  "name": "@kidsmentor/shared",
   "version": "1.0.0",
   "private": true,
-  "description": "Shared domain types, schemas, constants, and business logic for PawStay",
-  "main": "./dist/index.js",
-  "module": "./dist/index.mjs",
-  "types": "./dist/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "default": "./dist/index.js"
-    },
-    "./constants": {
-      "types": "./dist/constants/index.d.ts",
-      "import": "./dist/constants/index.js",
-      "default": "./dist/constants/index.js"
-    },
-    "./types": {
-      "types": "./dist/types/index.d.ts",
-      "import": "./dist/types/index.js",
-      "default": "./dist/types/index.js"
-    },
-    "./schemas": {
-      "types": "./dist/schemas/index.d.ts",
-      "import": "./dist/schemas/index.js",
-      "default": "./dist/schemas/index.js"
-    },
-    "./pricing": {
-      "types": "./dist/pricing/index.d.ts",
-      "import": "./dist/pricing/index.js",
-      "default": "./dist/pricing/index.js"
-    },
-    "./ranking": {
-      "types": "./dist/ranking/index.d.ts",
-      "import": "./dist/ranking/index.js",
-      "default": "./dist/ranking/index.js"
-    },
-    "./state-machine": {
-      "types": "./dist/state-machine/index.d.ts",
-      "import": "./dist/state-machine/index.js",
-      "default": "./dist/state-machine/index.js"
-    },
-    "./cancellation": {
-      "types": "./dist/cancellation/index.d.ts",
-      "import": "./dist/cancellation/index.js",
-      "default": "./dist/cancellation/index.js"
-    },
-    "./payments": {
-      "types": "./dist/payments/index.d.ts",
-      "import": "./dist/payments/index.js",
-      "default": "./dist/payments/index.js"
-    },
-    "./env": {
-      "types": "./dist/env.d.ts",
-      "import": "./dist/env.js",
-      "default": "./dist/env.js"
-    }
-  },
-  "scripts": {
-    "build": "tsc",
-    "typecheck": "tsc --noEmit",
-    "test": "vitest run"
-  },
-  "dependencies": {
-    "zod": "^4.6.7"
-  },
-  "devDependencies": {
-    "@pawstay/config": "workspace:*",
-    "@types/node": "^20.11.24",
-    "typescript": "^5.3.3",
-    "vitest": "^2.1.9"
-  }
+  "description": "Shared domain types, schemas, constants, and business logic for KidsMentor",
+  "main": "./index.ts",
+  "types": "./index.ts"
 }

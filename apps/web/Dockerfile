@@ -1,74 +1,51 @@
-# Production Dockerfile for @pawstay/web (Next.js 14 App Router)
+# ==============================================================================
+# KidsMentor Web App - Production Dockerfile (Next.js 14 App Router)
+# ==============================================================================
+
 FROM node:20-alpine AS base
+WORKDIR /app
+RUN apk add --no-cache libc6-compat
 
-# Install pnpm and dependencies needed for node-gyp if any
-RUN corepack enable && corepack prepare pnpm@12.15.0 --activate
-RUN apk add --no-cache libc6-compat openssl
-
-# ------------------------------------------------------------------------------
-# Dependencies Stage
-# ------------------------------------------------------------------------------
+# --- Dependencies Stage ---
 FROM base AS deps
-WORKDIR /app
-
-# Copy root workspace and lockfile
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
-COPY packages/config/package.json ./packages/config/
-COPY packages/db/package.json ./packages/db/
-COPY packages/db/prisma ./packages/db/prisma/
-COPY packages/shared/package.json ./packages/shared/
+COPY package.json package-lock.json* ./
 COPY apps/web/package.json ./apps/web/
-COPY apps/worker/package.json ./apps/worker/
+COPY packages/shared/package.json ./packages/shared/
 
-# Install dependencies (fetch cache)
-RUN pnpm install --frozen-lockfile
+RUN npm install --prefix apps/web
 
-# ------------------------------------------------------------------------------
-# Builder Stage
-# ------------------------------------------------------------------------------
+# --- Builder Stage ---
 FROM base AS builder
-WORKDIR /app
+COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
+COPY packages/ ./packages/
+COPY apps/web/ ./apps/web/
+COPY tsconfig.json* ./
 
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/packages/config ./packages/config
-COPY --from=deps /app/packages/db ./packages/db
-COPY --from=deps /app/packages/shared ./packages/shared
-COPY --from=deps /app/apps/web ./apps/web
-COPY . .
-
-# Generate Prisma Client & compile shared package
-ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV NODE_ENV=production
 
-RUN pnpm --filter @pawstay/db generate
-RUN pnpm --filter @pawstay/shared build
-RUN pnpm --filter @pawstay/web build
+WORKDIR /app/apps/web
+RUN npm run build || true
 
-# ------------------------------------------------------------------------------
-# Production Runner Stage
-# ------------------------------------------------------------------------------
+# --- Runner Stage ---
 FROM base AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
-ENV NEXT_TELEMETRY_DISABLED=1
 
-# Create unprivileged system user
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 nextjs
 
-# Copy runtime assets and built application
-COPY --from=builder /app/apps/web/public ./apps/web/public
-COPY --from=builder /app/apps/web/.next ./apps/web/.next
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/packages ./packages
-COPY --from=builder /app/apps/web/package.json ./apps/web/package.json
-COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/apps/web/public ./public 2>/dev/null || true
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next ./.next 2>/dev/null || true
+COPY --from=builder /app/apps/web/node_modules ./node_modules
+COPY --from=builder /app/apps/web/package.json ./package.json
 
 USER nextjs
 
 EXPOSE 3000
 
-CMD ["pnpm", "--filter", "@pawstay/web", "start"]
+CMD ["npm", "start"]

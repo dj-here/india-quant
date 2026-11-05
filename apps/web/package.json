@@ -1,8 +1,8 @@
 {
-  "name": "@campusedge/web",
+  "name": "@kidsmentor/web",
   "version": "1.0.0",
   "private": true,
-  "description": "CampusEdge Institutional Training & Placement Platform (Next.js 14 App Router)",
+  "description": "KidsMentor 1-on-1 AI Tutoring Web App (Next.js 14 App Router)",
   "scripts": {
     "dev": "next dev -p 3000",
     "build": "next build",
@@ -11,7 +11,6 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@pawstay/db": "workspace:*",
     "bcryptjs": "^2.4.3",
     "clsx": "^2.1.1",
     "date-fns": "^3.6.0",

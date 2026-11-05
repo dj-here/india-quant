@@ -1,41 +1,84 @@
-version: '3.8'
+version: "3.8"
 
 services:
-  web:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: campusedge_web
-    restart: unless-stopped
-    ports:
-      - '3000:3000'
-    env_file:
-      - .env
-    environment:
-      - PORT=3000
-      - HOSTNAME=0.0.0.0
-    depends_on:
-      postgres:
-        condition: service_healthy
-
   postgres:
-    image: postgres:16-alpine
-    container_name: campusedge_postgres
+    image: pgvector/pgvector:pg16
+    container_name: kidsmentor-db
     restart: unless-stopped
     environment:
-      POSTGRES_USER: campusedge_user
-      POSTGRES_PASSWORD: campusedge_secure_password_2026
-      POSTGRES_DB: campusedge_db
+      POSTGRES_DB: kidsmentor
+      POSTGRES_USER: kidsmentor
+      POSTGRES_PASSWORD: kidsmentor_dev_password
     ports:
-      - '5432:5432'
+      - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U campusedge_user -d campusedge_db']
+      test: ["CMD-SHELL", "pg_isready -U kidsmentor -d kidsmentor"]
       interval: 5s
       timeout: 5s
       retries: 5
 
+  redis:
+    image: redis:7-alpine
+    container_name: kidsmentor-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: kidsmentor-api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - ENVIRONMENT=development
+      - DATABASE_URL=postgresql+asyncpg://kidsmentor:kidsmentor_dev_password@postgres:5432/kidsmentor
+      - REDIS_URL=redis://redis:6379/0
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-mock}
+      - JWT_SECRET_KEY=kidsmentor-dev-secret-key-do-not-use-in-production
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: ["uvicorn", "apps.api.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: kidsmentor-worker
+    restart: unless-stopped
+    environment:
+      - ENVIRONMENT=development
+      - DATABASE_URL=postgresql+asyncpg://kidsmentor:kidsmentor_dev_password@postgres:5432/kidsmentor
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["python", "-m", "apps.worker.worker", "--daemon"]
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    container_name: kidsmentor-web
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    depends_on:
+      - api
+
 volumes:
-  postgres_data:
-    driver: local
+  pgdata:

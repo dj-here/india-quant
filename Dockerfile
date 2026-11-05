@@ -1,64 +1,49 @@
 # ==============================================================================
-# CampusEdge Learning Solutions - Production Dockerfile
-# Multi-stage build optimized for Next.js App Router & Prisma
+# KidsMentor Backend & Worker - Production Multi-Stage Dockerfile
+# Python 3.11-slim with SymPy, FastAPI, SQLAlchemy, and Non-Root User
 # ==============================================================================
 
-FROM node:20-alpine AS base
-RUN apk add --no-cache libc6-compat openssl
-RUN corepack enable && corepack prepare pnpm@12.15.0 --activate
+# --- Stage 1: Builder ---
+FROM python:3.11-slim AS builder
+
 WORKDIR /app
 
-# ------------------------------------------------------------------------------
-# 1. Install Dependencies
-# ------------------------------------------------------------------------------
-FROM base AS deps
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-COPY packages/db/package.json ./packages/db/
-COPY apps/web/package.json ./apps/web/
-COPY scripts/ ./scripts/
-RUN pnpm install --frozen-lockfile
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
 
-# ------------------------------------------------------------------------------
-# 2. Build Application
-# ------------------------------------------------------------------------------
-FROM base AS builder
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/packages/db/node_modules ./packages/db/node_modules
-COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
-COPY . .
+COPY requirements.txt .
 
-ENV NODE_ENV=production
-ENV NEXT_TELEMETRY_DISABLED=1
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
 
-# Generate Prisma client and build web application
-RUN pnpm --filter @pawstay/db generate
-RUN pnpm --filter @pawstay/db build
-RUN pnpm --filter @campusedge/web build
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
+    pip install --no-cache-dir -r requirements.txt
 
-# ------------------------------------------------------------------------------
-# 3. Production Runner
-# ------------------------------------------------------------------------------
-FROM node:20-alpine AS runner
+# --- Stage 2: Production Runner ---
+FROM python:3.11-slim AS runner
+
 WORKDIR /app
 
-ENV NODE_ENV=production
-ENV NEXT_TELEMETRY_DISABLED=1
-ENV PORT=3000
-ENV HOSTNAME="0.0.0.0"
+# Create unprivileged user for security compliance (Principle: Fail Closed & Secure)
+RUN groupadd -g 1001 appgroup && \
+    useradd -u 1001 -g appgroup -s /bin/bash -m appuser
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
-RUN apk add --no-cache openssl
+# Copy virtual environment from builder
+COPY --from=builder /opt/venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
 
-COPY --from=builder /app/package.json ./
-COPY --from=builder /app/pnpm-workspace.yaml ./
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/packages ./packages
-COPY --from=builder /app/apps/web ./apps/web
-COPY --from=builder /app/scripts ./scripts
+# Copy application source code
+COPY --chown=appuser:appgroup apps/ ./apps/
+COPY --chown=appuser:appgroup prompts/ ./prompts/
+COPY --chown=appuser:appgroup evals/ ./evals/
 
-USER nextjs
+USER appuser
 
-EXPOSE 3000
+EXPOSE 8000
 
-CMD ["node", "apps/web/node_modules/next/dist/bin/next", "start", "apps/web", "-p", "3000", "-H", "0.0.0.0"]
+# Default command runs the FastAPI ASGI server
+CMD ["uvicorn", "apps.api.main:app", "--host", "0.0.0.0", "--port", "8000"]

@@ -1,82 +1,101 @@
 import React from 'react';
 import { Metadata } from 'next';
+import Link from 'next/link';
+import { ShieldCheck, Lock, PhoneCall } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: 'Privacy Policy | DPDP Act 2023 Compliance',
+  title: 'Privacy Policy | KidsMentor DPDP Act 2023 & COPPA Compliance',
   description:
-    'CampusEdge privacy policy compliant with India’s Digital Personal Data Protection (DPDP) Act, 2023. Clear information on student and institutional data governance.',
+    'KidsMentor child privacy architecture compliant with India DPDP Act 2023 (Section 9) and US COPPA. Verifiable parental consent, radical data minimization, and 1-click erasure.',
 };
 
 export default function PrivacyPage() {
   return (
-    <div className="bg-slate-50 min-h-screen py-16">
+    <div className="bg-amber-50/20 min-h-screen py-16">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 bg-white p-8 lg:p-12 rounded-3xl border border-slate-200 shadow-sm">
         
         <div className="border-b border-slate-100 pb-6 mb-8 space-y-2">
-          <span className="text-xs font-bold text-sky-600 uppercase tracking-widest">Legal &amp; Regulatory Governance</span>
-          <h1 className="text-3xl font-black text-slate-900">Privacy Policy</h1>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold">
+            <ShieldCheck className="w-4 h-4 text-emerald-600" />
+            <span>Statutory Child Privacy Governance</span>
+          </div>
+          <h1 className="text-3xl font-black text-slate-900">KidsMentor Privacy Policy</h1>
           <p className="text-xs text-slate-500">
-            Last Updated: November 2026 | Compliant with India&apos;s Digital Personal Data Protection (DPDP) Act, 2023
+            Compliant with Section 9 of the India Digital Personal Data Protection Act, 2023 &amp; US COPPA (16 CFR Part 312)
           </p>
         </div>
 
         <div className="prose prose-slate max-w-none text-xs leading-relaxed space-y-6 text-slate-700">
           <section className="space-y-2">
-            <h2 className="text-base font-bold text-slate-900">1. Commitment to Data Protection</h2>
+            <h2 className="text-base font-bold text-slate-900">1. Principle of Radical Data Minimization</h2>
             <p>
-              CampusEdge Learning Solutions (operating under legal entity <em>CampusEdge EdTech Private Limited</em>, hereinafter &ldquo;CampusEdge&rdquo;, &ldquo;we&rdquo;, &ldquo;us&rdquo;) is committed to safeguarding personal and institutional data in accordance with the provisions of India&apos;s <strong>Digital Personal Data Protection Act, 2023 (DPDP Act 2023)</strong> and applicable higher education data standards.
+              KidsMentor is built for children aged 6 to 16. To guarantee minor safety:
             </p>
-          </section>
-
-          <section className="space-y-2">
-            <h2 className="text-base font-bold text-slate-900">2. Categories of Data Collected</h2>
-            <p>We collect data under two distinct streams:</p>
             <ul className="list-disc pl-5 space-y-1">
-              <li><strong>Institutional Decision-Maker Data:</strong> Name, official designation, college name, official email address, mobile phone number, student strength, and institutional requirements submitted via proposal and demo inquiry forms.</li>
-              <li><strong>Student Assessment Data:</strong> Candidate name, academic email, contact number, degree program, branch, graduation year, timed MCQ responses, coding scores, and diagnostic test analytics.</li>
+              <li>We <strong>never</strong> collect, ask for, or store a child&apos;s email address or telephone number.</li>
+              <li>We <strong>never</strong> collect a child&apos;s surname, school address, or physical location.</li>
+              <li>Child profiles contain only: a first name or chosen nickname, age band (6–8, 9–12, 13–16), grade level, educational board, and learning interests.</li>
+              <li>Children log in via a parent-managed 4-digit PIN.</li>
             </ul>
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-base font-bold text-slate-900">3. Purpose of Processing &amp; Affirmative Consent</h2>
+            <h2 className="text-base font-bold text-slate-900">2. Verifiable Parental Consent (DPDP Act Section 9)</h2>
             <p>
-              Under Section 6 of the DPDP Act 2023, personal data is processed solely on the basis of explicit, informed affirmative consent for the following specified academic purposes:
+              Before any child profile can be created, a parent or legal guardian must register and provide verifiable affirmative consent. Parents have 24/7 access to:
             </p>
             <ul className="list-disc pl-5 space-y-1">
-              <li>Evaluating and presenting student placement readiness diagnostic reports.</li>
-              <li>Compiling section-wise attendance and progress reports formatted for institutional <strong>NBA Criterion 4</strong> and <strong>NAAC Criterion 5.1.3</strong> audits.</li>
-              <li>Coordinating training schedules, lab pre-flight verifications, and trainer allocations with the partner college.</li>
-              <li>Issuing digitally verifiable certificates of course completion.</li>
+              <li>Inspect complete conversational transcripts between their child and Ollie the AI Tutor.</li>
+              <li>View all prompt versions, model targets, and deterministic mathematical verification flags.</li>
+              <li>Configure daily time limits, quiet hours, and tutor strictness.</li>
             </ul>
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-base font-bold text-slate-900">4. Prohibition of Commercial Data Resale</h2>
+            <h2 className="text-base font-bold text-slate-900">3. Zero Targeted Profiling &amp; Zero Advertising</h2>
             <p>
-              <strong>We do not sell, rent, lease, or monetize student or institutional personal data to third-party commercial aggregators, loan providers, or advertising networks.</strong> Personal information is strictly utilized for the institutional education and assessment services contracted by the partner college or authorized by the student.
+              Under Section 9(2) and 9(3) of the DPDP Act 2023, KidsMentor strictly prohibits:
+            </p>
+            <ul className="list-disc pl-5 space-y-1">
+              <li>Behavioral tracking or commercial psychological profiling of children.</li>
+              <li>Targeted advertising, third-party trackers, or marketing pixels.</li>
+              <li>Selling or renting any user data under any circumstance.</li>
+            </ul>
+          </section>
+
+          <section className="space-y-2">
+            <h2 className="text-base font-bold text-slate-900">4. AI Provider Zero-Data-Retention</h2>
+            <p>
+              All interactions with LLMs (Anthropic Claude, etc.) operate under enterprise zero-data-retention (ZDR) agreements. No student prompts, homework photos, or voice clips are ever used to train or fine-tune public models.
             </p>
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-base font-bold text-slate-900">5. Data Retention &amp; Erasure (Section 12 DPDP Act)</h2>
+            <h2 className="text-base font-bold text-slate-900">5. Right to Erasure &amp; 1-Click Data Export</h2>
             <p>
-              Personal data is retained only for the duration required to satisfy pedagogical delivery and accreditation verification (typically up to the completion of the students&apos; graduating academic cycle). Upon written request by an authorized college authority or individual data principal, student records can be permanently expunged from our active operational databases within thirty (30) calendar days.
+              Parents hold sovereign rights over all stored data. At any time via the Parent Dashboard:
             </p>
+            <ul className="list-disc pl-5 space-y-1">
+              <li><strong>1-Click Export:</strong> Download all child data, session logs, and Character Garden items in standard JSON format.</li>
+              <li><strong>1-Click Erasure:</strong> Irrevocably purge all child profiles, messages, attempts, and memories permanently from our database.</li>
+            </ul>
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-base font-bold text-slate-900">6. Data Protection Officer (DPO) Contact</h2>
+            <h2 className="text-base font-bold text-slate-900">6. Crisis Escalation &amp; Childline India (1098)</h2>
             <p>
-              In compliance with the DPDP Act 2023, queries, grievances, or requests for data review may be addressed to our designated Data Protection Grievance Officer:
+              In compliance with the POCSO Act 2012 and Juvenile Justice regulations, disclosures of physical abuse, neglect, or suicidal distress trigger automated crisis responses providing the 24x7 toll-free Childline India helpline (1098) and immediate parent notification.
             </p>
-            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
-              <p className="font-bold text-slate-900">Grievance Redressal Desk</p>
-              <p>CampusEdge EdTech Private Limited</p>
-              <p>Email: <a href="mailto:dj0791463@gmail.com" className="text-sky-600 font-semibold">dj0791463@gmail.com</a></p>
-              <p>Phone: +91 63662 14556</p>
-              <p>Address: #402, Outer Ring Road, Bellandur, Bengaluru, Karnataka – 560103</p>
-            </div>
           </section>
+        </div>
+
+        <div className="mt-8 pt-6 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+          <Link href="/" className="font-bold text-amber-700 hover:text-amber-800">
+            &larr; Back to KidsMentor Home
+          </Link>
+          <div className="flex items-center gap-1.5 text-slate-400">
+            <PhoneCall className="w-3.5 h-3.5 text-rose-500" /> Childline India: 1098
+          </div>
         </div>
 
       </div>

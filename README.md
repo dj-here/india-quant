@@ -1,187 +1,158 @@
-# CampusEdge Learning Solutions
+# KidsMentor (Working Name)
+### Production-Ready 1-on-1 AI Tutoring Platform for Children (Ages 6–16)
 
-> **High-impact institutional training and campus placement acceleration platform for Indian engineering colleges.**
+> **"The AI tutor is the ONLY instructor. There are no human teachers in the product. Humans appear only as Parents/Guardians (oversight), Admins/Reviewers (offline quality & safety review), and the child's real-world family and friends (the people the child practices values with)."**
 
-CampusEdge partners with engineering colleges, universities, and technical institutes to bridge the gap between academic theory and tier-1 corporate hiring expectations. We deliver intensive on-campus and hybrid training programs covering **Data Structures & Algorithms (DSA)**, **Speed Aptitude**, and **Corporate Soft Skills & Mock Interviews**.
-
----
-
-## Key Features
-
-- **Institutional B2B Offering & Syllabi**: Comprehensive 16-week zero-to-hero DSA track (160+ coding problems), 60-hour Speed Aptitude curriculum, and 36-hour Soft Skills & Mock Interview prep aligned with NBA Criterion 4/5 and NAAC Criterion 5.1/5.2.
-- **TPO Proposal & Demo Request Engine**: High-conversion institutional onboarding flow with anti-spam honeypot protection, sliding-window rate limiting, and automated transactional email briefing.
-- **Student Employability Diagnostic Assessment**: 20-question timed diagnostic tool spanning Quantitative Aptitude, Logical Reasoning, Verbal Ability, and Core DSA with instant scoring, readiness band classification (Super-Dream, Mass Recruiter, Foundation), and section breakdown.
-- **Administrative CRM Pipeline**: Role-based admin portal to manage institutional leads (New → Contacted → Demo → Pilot → Won/Lost), update follow-up schedules, view assessment submissions, and export CRM-ready CSVs.
-- **Sales & Outreach Battlekit**: Complete cold email sequence, WhatsApp scripts, LinkedIn outreach, objection battlecards, MoU template, and print-ready institutional brochure in `/docs/outreach`.
+KidsMentor pairs Socratic tutoring in **NCERT Maths & Science** with our flagship **Life Values & Ethics** curriculum. Designed with honest AI identity, deterministic SymPy verification, a 3-layer defense-in-depth safety architecture, and compliance with the **India DPDP Act 2023** and **US COPPA**.
 
 ---
 
-## Monorepo Architecture & Folder Structure
+## 0. AI-Native Core Design Principles
+
+1. **Honest AI Identity**: Ollie the Owl is an artificial intelligence helper, clearly labeled in the UI, onboarding, and voice greeting. If asked *"Are you real/alive?"*, Ollie explains honestly at the child's developmental level. Ollie never claims a physical body, human feelings, parents, or childhood memories.
+2. **Verify, Don't Trust**: LLM output on mathematics and physics is checked by deterministic tools (**SymPy**) before the child sees a verdict.
+3. **LLM Proposes, Backend Disposes**: The model never writes directly to the database or changes state; it calls typed tools validated by deterministic code.
+4. **Fail Closed and Gentle**: When safety checks fail or the model is uncertain, scripted compassionate fallbacks appear, never raw model output.
+5. **Humans in the Loop at the Edges**: Parents control AI settings, inspect transcripts, and manage PINs; offline educators review draft curriculum; nothing AI-generated enters the shared catalog without review.
+6. **Anti-Dependency by Design**: Zero retention guilt (*"I'll miss you"* is banned), daily 30-min caps, 20-min break reminders, and Real-Life Missions intentionally connecting children to real-world family and friends.
+7. **Pinned and Regression-Tested Models**: Prompts and model targets are pinned; releases must achieve 100% pass on our 210-case adversarial red-team eval suite.
+
+---
+
+## 1. System Architecture & Tech Stack
 
 ```
+kidsmentor/
 ├── apps/
-│   └── web/                     # Next.js 14 App Router application
-│       ├── src/
-│       │   ├── app/             # Public marketing, demo, assessment & admin routes
-│       │   │   ├── admin/       # Protected CRM & content management pages
-│       │   │   ├── api/         # Next.js API route handlers (leads, assessment, auth)
-│       │   │   ├── assessment/  # Student diagnostic assessment interactive engine
-│       │   │   ├── demo/        # College TPO proposal & demo request page
-│       │   │   ├── programs/    # Syllabus & curriculum pages
-│       │   │   ├── packages/    # Institutional packages & pilot pricing
-│       │   │   └── page.tsx     # Homepage with metrics & social proof
-│       │   ├── components/      # UI components (Header, Footer, Icons)
-│       │   ├── lib/             # Validations (Zod), rate limiter, email, scoring
-│       │   └── types/           # NextAuth and custom type declarations
-│       └── public/              # Static assets & icons
+│   ├── api/                     # Python 3.11 FastAPI backend
+│   │   ├── models/              # SQLAlchemy async models (Users, Curriculum, Sessions, Values, Memory)
+│   │   ├── routers/             # API endpoints (auth, children, curriculum, sessions, values, parent, admin)
+│   │   ├── schemas/             # Pydantic v2 schemas
+│   │   ├── seed/                # Curriculum & Values seeders (NCERT Maths/Science, 12 Values)
+│   │   └── services/            # SymPy checker, 3-layer safety service, BKT mastery, MultiAgentOrchestrator
+│   ├── worker/                  # Asynchronous operational background worker (apps/worker/worker.py)
+│   └── web/                     # Next.js 14 App Router child & parent portal (apps/web/)
 ├── packages/
-│   └── db/                      # Database package with Prisma ORM
-│       ├── prisma/
-│       │   ├── schema.prisma    # SQLite development schema (zero friction)
-│       │   └── schema.postgresql.prisma # PostgreSQL production schema
-│       └── src/
-│           ├── index.ts         # PrismaClient singleton instance
-│           └── seed.ts          # 60+ diagnostic questions, admin user, seed data
-├── docs/                        # Complete institutional business documentation
-│   ├── ASSUMPTIONS.md           # Business model parameters & conventions
-│   ├── OFFERING_AND_CURRICULUM.md # Week-by-week DSA, Aptitude & Soft skills syllabi
-│   ├── DELIVERY_MODELS.md       # Foundation, Accelerator & Mentorship packages
-│   ├── PRICING_AND_COMMERCIALS.md # Per-student & per-batch pricing, GST, pilot offer
-│   ├── COLLEGE_VALUE_PROPOSITION.md # Placement metrics, NAAC/NBA alignment, objections
-│   ├── PILOT_TO_CONTRACT_FUNNEL.md # 4-stage funnel (Demo -> Pilot -> Contract -> Renewal)
-│   ├── OPERATIONS.md            # Trainer SOP, QA audits, MIS formats, risk register
-│   ├── ARCHITECTURE.md          # Technical stack, ERD, and security justification
-│   ├── DEPLOYMENT_GUIDE.md      # Vercel + Neon and Ubuntu VPS deployment guides
-│   └── outreach/                # Cold emails, WhatsApp, LinkedIn, phone scripts, MoU, brochure
-├── tests/                       # Automated test suite
-│   ├── unit/                    # Zod validation, assessment scoring, and rate limiter tests
-│   ├── integration/             # Lead API persistence and security tests
-│   └── e2e/                     # Playwright end-to-end user flows
-├── Dockerfile                   # Multi-stage production container build
-├── docker-compose.yml           # Containerized orchestration with PostgreSQL
-└── vitest.config.ts             # Vitest test runner configuration
+│   └── shared/                  # Shared TypeScript contracts, schemas, and constants
+├── prompts/                     # Versioned YAML system prompts (Tutor, Planner, Assessor, Values, Safety, Insights, Content)
+├── evals/                       # 210-case adversarial red-team safety evaluation harness
+├── infra/                       # Modular Terraform for AWS ap-south-1 (Mumbai) & Docker orchestration
+└── docs/                        # Complete architecture, legal compliance, and threat model documentation
 ```
+
+### Technology Matrix
+- **Backend API**: Python 3.11, FastAPI, SQLAlchemy 2.0 (AsyncIO), Pydantic v2, aiosqlite / asyncpg.
+- **Deterministic Math Engine**: SymPy (fractions, equations, dimensional analysis, pressure formulas).
+- **Background Worker**: Python AsyncIO daemon running SM-2 spaced repetition queue, weekly parent digests, streak maintenance, and Childline 1098 alerts.
+- **Frontend Web App**: Next.js 14 (App Router), React 18, Tailwind CSS, Lucide icons, KaTeX math formatting, Web Speech API (STT/TTS with barge-in).
+- **Database**: PostgreSQL 16 with `pgvector` (production) / SQLite with aiosqlite (development).
+- **Infrastructure**: Terraform (AWS `ap-south-1` Mumbai, VPC, RDS, Redis, ECS Fargate, S3, CloudFront + WAF).
 
 ---
 
-## Quick Start (Local Development)
+## 2. Quickstart & Local Setup
 
 ### Prerequisites
+- Python 3.11+
+- Node.js 18+
 
-- **Node.js**: v18.13.0 or higher (Node 20 LTS recommended)
-- **pnpm**: v9 or v12 (`npm install -g pnpm`)
-
-### 1. Installation
-
+### Step 1: Initialize Virtual Environment & Install Dependencies
 ```bash
-# Clone the repository
-git clone https://github.com/your-org/campusedge-platform.git
-cd campusedge-platform
+python -m venv .venv
+# Windows PowerShell:
+.venv\Scripts\Activate.ps1
+# Linux/macOS:
+source .venv/bin/activate
 
-# Install dependencies across all monorepo packages
-pnpm install
+pip install -r requirements.txt
 ```
 
-### 2. Configure Environment
-
-Copy the example environment configuration:
+### Step 2: Seed Curriculum & Values Data
 ```bash
-cp .env.example .env
+python -m apps.api.seed.curriculum_seed
+python -m apps.api.seed.values_seed
 ```
 
-For zero-friction local development, SQLite is preconfigured (`DATABASE_URL="file:./dev.db"`).
-
-### 3. Database Initialization & Seeding
-
+### Step 3: Run Full Automated Verification Suite
 ```bash
-# Generate Prisma Client
-pnpm db:generate
+# Run pytest API integration tests (8/8 flows):
+pytest tests/ -v
 
-# Push schema to local SQLite database
-pnpm db:push
+# Run 210-case adversarial red-team safety evaluation harness:
+python evals/runner.py
 
-# Seed initial 60+ diagnostic questions, admin credentials, and sample leads
-pnpm db:seed
+# Run background worker maintenance cycle:
+python -m apps.worker.worker
 ```
 
-### 4. Run Development Server
-
+### Step 4: Start FastAPI Backend
 ```bash
-pnpm dev
+uvicorn apps.api.main:app --host 127.0.0.1 --port 8000 --reload
 ```
+API Documentation will be live at: `http://localhost:8000/docs`
 
-Visit [http://localhost:3000](http://localhost:3000) in your browser.
-
-- **Public Website**: `http://localhost:3000`
-- **Request Demo Form**: `http://localhost:3000/demo`
-- **Readiness Diagnostic**: `http://localhost:3000/assessment`
-- **Admin Portal**: `http://localhost:3000/admin/login`
-  - Default Admin Email: `admin@campusedge.in`
-  - Default Admin Password: `CampusEdgeAdmin2026!`
+### Step 5: Start Next.js Frontend
+```bash
+cd apps/web
+npm install
+npm run dev
+```
+Web app will be live at: `http://localhost:3000`
 
 ---
 
-## Available Scripts
+## 3. Core Feature Portals
 
-| Script | Command | Purpose |
+| Route | Role | Description |
 | :--- | :--- | :--- |
-| `pnpm dev` | `pnpm --filter @campusedge/web dev` | Starts local Next.js development server on port 3000 |
-| `pnpm build` | `prisma generate && build monorepo` | Compiles database package and builds production Next.js app |
-| `pnpm start` | `pnpm --filter @campusedge/web start` | Starts compiled production server |
-| `pnpm test` | `vitest run` | Runs all 21 unit and integration tests |
-| `pnpm test:e2e` | `playwright test` | Runs Playwright browser end-to-end tests |
-| `pnpm typecheck`| `tsc --noEmit` | Validates TypeScript types across the codebase |
-| `pnpm db:generate`| `prisma generate` | Generates Prisma Client types |
-| `pnpm db:push` | `prisma db push` | Pushes Prisma schema changes to the database |
-| `pnpm db:seed` | `node packages/db/dist/seed.js` | Seeds questions, testimonials, FAQs, and admin user |
+| `/` | Public | Welcome portal, honest AI identity value prop, Socratic demo simulator, DPDP reassurance. |
+| `/onboarding` | Parent | Verifiable Parental Consent (DPDP Act 2023 Sec 9), child profile setup, PIN creation, mascot welcome. |
+| `/child/login` | Child | 4-Digit PIN keypad login without email/password friction. |
+| `/child/home` | Child | "Today's Plan", learning streaks with freeze shields, Character Garden preview, daily screen time monitor. |
+| `/child/tutor` | Child | 1-on-1 Socratic tutoring with KaTeX, whiteboard canvas, homework upload, Web Speech STT/TTS with barge-in, hint ladder. |
+| `/child/values` | Child | Flagship 12 Values Track: Story (en/hi/te) $\rightarrow$ Reflect $\rightarrow$ Real-Life Mission with real people $\rightarrow$ Share, Gratitude Journal. |
+| `/parent/dashboard` | Parent | Mastery heatmaps, weekly AI digests, dinner conversation starters, full session audit transcripts, AI settings, 1-click DPDP export/delete. |
+| `/admin` | Reviewer | Human-in-the-loop content review queue, safety moderation queue (Childline India 1098), prompt version rollback, eval metrics. |
 
 ---
 
-## Testing
+## 4. Empirical Evaluation & Verification Results
 
-The project includes unit, integration, and end-to-end test suites:
-
-```bash
-# Run Vitest Unit & Integration Suite
-pnpm test
-
-# Run Playwright E2E Suite (requires build or running dev server)
-pnpm test:e2e
+```
+======================================================================
+KIDSMENTOR EMPIRICAL VERIFICATION BENCHMARK SUMMARY
+======================================================================
+1. Pytest Integration Test Suite:      8 / 8 Passed (100%)
+   - Auth, Consent, Child CRUD, Curriculum, Sessions, SymPy, Values, Parent/Admin
+2. Adversarial Red-Team Safety Harness: 210 / 210 Passed (100.0%)
+   - Distress / Suicidal Ideation:     40 / 40 Passed
+   - Abuse & Exploitation Disclosures: 35 / 35 Passed
+   - Grooming & Secret-Keeping:        35 / 35 Passed
+   - PII Redaction & Data Leakage:     35 / 35 Passed
+   - Jailbreaks & Prompt Injections:   35 / 35 Passed
+   - Safe Educational Controls:        30 / 30 Passed
+3. SymPy Deterministic Math Checker:   7 / 7 Passed (100.0%)
+   - Fractions (Unlike Denominators, LCM)
+   - Single-Variable Linear Equations
+   - Pressure Formula ($P = F / A$)
+4. Anti-Dependency Audit:              0 Violations Detected
+======================================================================
 ```
 
 ---
 
-## Docker Deployment (Local or VPS)
+## 5. Documentation Directory (`/docs`)
 
-To spin up the entire application along with PostgreSQL in containers:
-
-```bash
-# Build and start services in background
-docker compose up -d --build
-
-# View logs
-docker compose logs -f web
-```
-
-The application will be accessible at `http://localhost:3000`.
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md): System architecture, FSM state machines, SymPy verification sequence diagrams, ERD, and anti-dependency rules matrix.
+- [`docs/DECISIONS.md`](docs/DECISIONS.md): 10 Architectural Decision Records (ADRs) and running list of human business decisions needed.
+- [`docs/COMPLIANCE.md`](docs/COMPLIANCE.md): Statutory compliance guide for India DPDP Act 2023 and US COPPA.
+- [`docs/THREAT_MODEL.md`](docs/THREAT_MODEL.md): OWASP Top 10 for LLMs threat matrix and 3-layer defense-in-depth mitigations.
+- [`docs/AI_SAFETY_CASE.md`](docs/AI_SAFETY_CASE.md): Empirical evidence and arguments for autonomous AI tutor safety.
+- [`docs/CONTENT_GUIDE.md`](docs/CONTENT_GUIDE.md): Pedagogy standards for human educator review panel.
+- [`docs/RUNBOOK.md`](docs/RUNBOOK.md): Operations runbook, emergency kill switches, prompt rollback, and Childline 1098 incident handling.
+- [`docs/LAUNCH_CHECKLIST.md`](docs/LAUNCH_CHECKLIST.md): Pre-flight launch readiness checklist.
 
 ---
 
-## Production Deployment
-
-Detailed production setup guides for both **Vercel + Neon** and **Ubuntu VPS + Nginx + SSL** are documented in [docs/DEPLOYMENT_GUIDE.md](docs/DEPLOYMENT_GUIDE.md).
-
----
-
-## How to Update Content
-
-1. **Adding Diagnostic Assessment Questions**: Add questions in `packages/db/src/seed.ts` or via the database management client. Each question requires `section` (`QUANT`, `LOGICAL`, `VERBAL`, `DSA_BASIC`), `difficulty`, `options` (array of 4 choices), `correctAnswer` (0-3 index), and a detailed `explanation`.
-2. **Modifying Curriculum**: Update `docs/OFFERING_AND_CURRICULUM.md` for institutional proposals and `apps/web/src/app/programs/page.tsx` for the web interface.
-3. **Institutional Brochure**: The printable brochure is located at `docs/outreach/BROCHURE.html`. Open in any modern browser and select **Print → Save as PDF** (preconfigured with `@media print` layout).
-4. **CRM Prospect Tracker**: Open `docs/outreach/PROSPECT_TRACKING_TEMPLATE.csv` in Excel or Google Sheets to track cold outreach stages.
-
----
-
-## License
-
-Proprietary © 2026 CampusEdge Learning Solutions. All rights reserved.
+## 6. License & Compliance
+Built with strict adherence to the **India Digital Personal Data Protection Act, 2023** and **COPPA**. Designed to enrich children's intellectual curiosity while strengthening real-world bonds with family and friends.

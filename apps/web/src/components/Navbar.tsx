@@ -3,160 +3,207 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, X, ArrowRight, Phone, ShieldCheck, Award } from 'lucide-react';
+import { 
+  Sparkles, 
+  BookOpen, 
+  HeartHandshake, 
+  ShieldCheck, 
+  User, 
+  Menu, 
+  X, 
+  PhoneCall,
+  Settings
+} from 'lucide-react';
 
 export function Navbar() {
-  const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const navLinks = [
-    { name: 'Programs', href: '/programs' },
-    { name: 'Packages & Pricing', href: '/packages' },
-    { name: 'How It Works', href: '/how-it-works' },
-    { name: 'Readiness Test', href: '/assessment', highlight: true },
-    { name: 'About', href: '/about' },
-    { name: 'FAQ', href: '/faq' },
-    { name: 'Contact', href: '/contact' },
-  ];
-
-  const isAdminRoute = pathname?.startsWith('/admin');
-  if (isAdminRoute) {
-    return null; // Admin has its own dedicated shell
-  }
+  const isChildArea = pathname?.startsWith('/child');
 
   return (
-    <>
-      {/* Top Notification / Trust Bar */}
-      <div className="bg-slate-900 text-slate-300 text-xs py-2 px-4 border-b border-slate-800">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2">
+    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-amber-100 shadow-sm">
+      {/* Honest AI Banner / Safety Strip */}
+      <div className="bg-amber-500 text-amber-950 px-4 py-1.5 text-xs font-medium flex items-center justify-between">
+        <div className="container mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1 text-emerald-400 font-semibold">
-              <ShieldCheck className="w-3.5 h-3.5" /> NAAC Criterion 5.1.3 & NBA Criterion 4 Compliant
+            <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>
+              <strong>Ollie is an AI Tutor:</strong> No human teacher is in this chat. Ollie is here to help you think!
             </span>
-            <span className="hidden md:inline text-slate-600">|</span>
-            <span className="hidden md:inline text-slate-400">Trusted by 40+ Engineering & Degree Colleges</span>
           </div>
-          <div className="flex items-center gap-4 text-slate-300">
-            <a
-              href="https://wa.me/916366214556"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-emerald-400 transition-colors flex items-center gap-1 font-medium"
-            >
-              <Phone className="w-3 h-3 text-emerald-400" /> TPO Desk: +91 63662 14556
-            </a>
-            <Link href="/admin/login" className="hover:text-white transition-colors text-slate-400">
-              Admin Portal
-            </Link>
+          <div className="hidden sm:flex items-center gap-3 text-xs">
+            <span className="flex items-center gap-1 text-amber-950/80">
+              <PhoneCall className="w-3 h-3" /> Childline India: <strong>1098</strong>
+            </span>
+            <span className="text-amber-900/60">|</span>
+            <span className="bg-amber-600/20 px-2 py-0.5 rounded text-[11px] font-semibold text-amber-950">
+              DPDP Act 2023 Compliant
+            </span>
           </div>
         </div>
       </div>
 
-      {/* Main Sticky Navbar */}
-      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-100 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            {/* Brand Logo */}
-            <Link href="/" className="flex items-center gap-2">
-              <div className="w-9 h-9 rounded-lg bg-gradient-to-tr from-sky-600 to-indigo-600 flex items-center justify-center text-white font-black text-lg shadow-md shadow-sky-600/20">
-                CE
-              </div>
-              <div className="flex flex-col">
-                <span className="font-extrabold text-lg tracking-tight text-slate-900 leading-none">
-                  Campus<span className="text-sky-600">Edge</span>
-                </span>
-                <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest mt-0.5">
-                  EdTech Solutions
-                </span>
-              </div>
-            </Link>
-
-            {/* Desktop Navigation Links */}
-            <nav className="hidden lg:flex items-center gap-6">
-              {navLinks.map((link) => {
-                const isActive = pathname === link.href;
-                return (
-                  <Link
-                    key={link.name}
-                    href={link.href}
-                    className={`text-sm font-medium transition-colors ${
-                      link.highlight
-                        ? 'text-sky-700 bg-sky-50 px-3 py-1.5 rounded-full hover:bg-sky-100 font-semibold'
-                        : isActive
-                        ? 'text-sky-600 font-semibold'
-                        : 'text-slate-600 hover:text-slate-900'
-                    }`}
-                  >
-                    {link.name}
-                  </Link>
-                );
-              })}
-            </nav>
-
-            {/* Desktop CTA Action Button */}
-            <div className="hidden sm:flex items-center gap-3">
-              <Link
-                href="/demo"
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-sky-600 hover:bg-sky-700 text-white font-semibold text-sm shadow-sm transition-all hover:shadow-sky-600/25 active:scale-95"
-              >
-                Request Free Demo <ArrowRight className="w-4 h-4" />
-              </Link>
-            </div>
-
-            {/* Mobile Hamburger Button */}
-            <div className="flex lg:hidden">
-              <button
-                type="button"
-                onClick={() => setIsOpen(!isOpen)}
-                className="p-2 rounded-md text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-                aria-label="Toggle navigation menu"
-              >
-                {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-              </button>
-            </div>
+      <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+        {/* Brand */}
+        <Link href="/" className="flex items-center gap-2.5 group">
+          <div className="w-10 h-10 rounded-2xl bg-amber-100 border border-amber-300 flex items-center justify-center text-2xl shadow-inner group-hover:scale-105 transition-transform">
+            🦉
           </div>
+          <div>
+            <div className="flex items-center gap-1.5">
+              <span className="font-extrabold text-xl tracking-tight text-slate-800">KidsMentor</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded border border-emerald-200">
+                AI Tutor
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-500 hidden sm:block">Socratic Academics & Life Values</p>
+          </div>
+        </Link>
+
+        {/* Desktop Nav */}
+        <nav className="hidden md:flex items-center gap-1">
+          {isChildArea ? (
+            <>
+              <Link 
+                href="/child/home" 
+                className={`px-3 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 transition-colors ${
+                  pathname === '/child/home' ? 'bg-amber-100 text-amber-900' : 'text-slate-600 hover:bg-slate-100'
+                }`}
+              >
+                <Sparkles className="w-4 h-4 text-amber-600" />
+                Today's Plan
+              </Link>
+              <Link 
+                href="/child/tutor" 
+                className={`px-3 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 transition-colors ${
+                  pathname === '/child/tutor' ? 'bg-indigo-100 text-indigo-900' : 'text-slate-600 hover:bg-slate-100'
+                }`}
+              >
+                <BookOpen className="w-4 h-4 text-indigo-600" />
+                1-on-1 with Ollie
+              </Link>
+              <Link 
+                href="/child/values" 
+                className={`px-3 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 transition-colors ${
+                  pathname === '/child/values' ? 'bg-emerald-100 text-emerald-900' : 'text-slate-600 hover:bg-slate-100'
+                }`}
+              >
+                <HeartHandshake className="w-4 h-4 text-emerald-600" />
+                Character Garden
+              </Link>
+            </>
+          ) : (
+            <>
+              <Link 
+                href="/#features" 
+                className="px-3 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 transition-colors"
+              >
+                How Ollie Teaches
+              </Link>
+              <Link 
+                href="/#curriculum" 
+                className="px-3 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 transition-colors"
+              >
+                Academics & Values
+              </Link>
+              <Link 
+                href="/#safety" 
+                className="px-3 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 transition-colors flex items-center gap-1.5"
+              >
+                <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                Safety Architecture
+              </Link>
+            </>
+          )}
+
+          <div className="h-5 w-px bg-slate-200 mx-2" />
+
+          {/* Role Portals */}
+          <Link
+            href="/parent/dashboard"
+            className={`px-3 py-2 rounded-xl text-sm font-semibold flex items-center gap-1.5 transition-colors ${
+              pathname?.startsWith('/parent') ? 'bg-slate-900 text-white' : 'text-slate-700 hover:bg-slate-100'
+            }`}
+          >
+            <User className="w-4 h-4" />
+            Parent Zone
+          </Link>
+
+          <Link
+            href="/admin"
+            className="p-2 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors"
+            title="Educator & Safety Reviewer Portal"
+          >
+            <Settings className="w-4 h-4" />
+          </Link>
+
+          <Link
+            href="/child/login"
+            className="ml-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold px-4 py-2 rounded-xl text-sm shadow-sm transition-all hover:shadow"
+          >
+            Child Login (PIN)
+          </Link>
+        </nav>
+
+        {/* Mobile menu button */}
+        <button
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className="md:hidden p-2 rounded-xl text-slate-600 hover:bg-slate-100"
+          aria-label="Toggle navigation menu"
+        >
+          {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+        </button>
+      </div>
+
+      {/* Mobile Drawer */}
+      {mobileMenuOpen && (
+        <div className="md:hidden border-t border-slate-200 bg-white px-4 py-4 space-y-2">
+          <Link 
+            href="/child/home" 
+            onClick={() => setMobileMenuOpen(false)}
+            className="block px-3 py-2 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-50"
+          >
+            🌟 Today's Plan
+          </Link>
+          <Link 
+            href="/child/tutor" 
+            onClick={() => setMobileMenuOpen(false)}
+            className="block px-3 py-2 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-50"
+          >
+            🦉 1-on-1 with Ollie
+          </Link>
+          <Link 
+            href="/child/values" 
+            onClick={() => setMobileMenuOpen(false)}
+            className="block px-3 py-2 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-50"
+          >
+            🌻 Character Garden
+          </Link>
+          <div className="h-px bg-slate-200 my-2" />
+          <Link 
+            href="/parent/dashboard" 
+            onClick={() => setMobileMenuOpen(false)}
+            className="block px-3 py-2 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-50"
+          >
+            👨‍👩‍👧 Parent Dashboard
+          </Link>
+          <Link 
+            href="/admin" 
+            onClick={() => setMobileMenuOpen(false)}
+            className="block px-3 py-2 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-50"
+          >
+            🛡️ Content & Safety Review
+          </Link>
+          <Link 
+            href="/child/login" 
+            onClick={() => setMobileMenuOpen(false)}
+            className="block text-center bg-amber-500 text-white font-bold px-4 py-2.5 rounded-xl text-sm mt-3"
+          >
+            Child PIN Login
+          </Link>
         </div>
-
-        {/* Mobile Slide-down Menu */}
-        {isOpen && (
-          <div className="lg:hidden border-b border-slate-200 bg-white px-4 pt-3 pb-6 space-y-3">
-            <div className="space-y-1">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.name}
-                  href={link.href}
-                  onClick={() => setIsOpen(false)}
-                  className={`block px-3 py-2 rounded-md text-base font-medium ${
-                    link.highlight
-                      ? 'bg-sky-50 text-sky-700 font-semibold'
-                      : pathname === link.href
-                      ? 'bg-slate-100 text-sky-600 font-semibold'
-                      : 'text-slate-700 hover:bg-slate-50'
-                  }`}
-                >
-                  {link.name}
-                </Link>
-              ))}
-            </div>
-            <div className="pt-2 border-t border-slate-100 flex flex-col gap-2">
-              <Link
-                href="/demo"
-                onClick={() => setIsOpen(false)}
-                className="w-full text-center py-2.5 rounded-lg bg-sky-600 text-white font-semibold text-sm shadow-sm"
-              >
-                Request Free Demo / Proposal
-              </Link>
-              <Link
-                href="/assessment"
-                onClick={() => setIsOpen(false)}
-                className="w-full text-center py-2.5 rounded-lg bg-slate-100 text-slate-800 font-semibold text-sm"
-              >
-                Try Free Student Assessment
-              </Link>
-            </div>
-          </div>
-        )}
-      </header>
-    </>
+      )}
+    </header>
   );
 }

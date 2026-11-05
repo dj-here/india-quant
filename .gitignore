@@ -42,14 +42,20 @@ yarn-error.log*
 Thumbs.db
 cloudflared.exe
 
-# Legacy job scrapers & scans
-*.py
-*.bat
-*.json
+# Python Virtual Environment & Caches
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+
+# Stale root scraper scripts from previous session
+/*.py
+/*.json
 !package.json
 !tsconfig.json
-!packages/*/package.json
-!packages/*/tsconfig.json
-!apps/*/package.json
-!apps/*/tsconfig.json
+
+# Legacy job scrapers & scans
+*.bat
 freshers_daily/
