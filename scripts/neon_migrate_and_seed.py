@@ -38,21 +38,39 @@ async def migrate_and_seed_neon(database_url: str):
 
     # Normalize Neon URL for asyncpg
     # Convert 'postgres://' or 'postgresql://' to 'postgresql+asyncpg://'
-    clean_url = database_url.strip()
-    if clean_url.startswith("postgres://"):
-        clean_url = "postgresql+asyncpg://" + clean_url[len("postgres://"):]
-    elif clean_url.startswith("postgresql://") and not clean_url.startswith("postgresql+asyncpg://"):
-        clean_url = "postgresql+asyncpg://" + clean_url[len("postgresql://"):]
+    import re
+    from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
 
-    # Remove pgbouncer / channel_binding query params if present for asyncpg
-    if "sslmode=require" not in clean_url and "ssl=" not in clean_url:
-        delimiter = "&" if "?" in clean_url else "?"
-        clean_url = f"{clean_url}{delimiter}ssl=require"
+    raw_url = database_url.strip()
+    if raw_url.startswith("postgres://"):
+        raw_url = "postgresql://" + raw_url[len("postgres://"):]
 
-    logger.info(f"Target Neon Database: {clean_url.split('@')[-1] if '@' in clean_url else 'configured'}")
+    parsed = urlparse(raw_url)
+    
+    # Direct endpoint preferred for DDL migrations (remove -pooler if present)
+    hostname = parsed.hostname or ""
+    direct_hostname = hostname.replace("-pooler", "")
 
+    # Reconstruct netloc with credentials
+    auth = ""
+    if parsed.username:
+        auth = parsed.username
+        if parsed.password:
+            auth += f":{parsed.password}"
+        auth += "@"
+    
+    port_str = f":{parsed.port}" if parsed.port else ""
+    netloc = f"{auth}{direct_hostname}{port_str}"
+
+    # Build clean asyncpg URL without incompatible query params
+    clean_url = f"postgresql+asyncpg://{netloc}{parsed.path}"
+    
+    logger.info(f"Target Neon Database: {direct_hostname}{parsed.path}")
+
+    connect_args = {"ssl": True}
     engine = create_async_engine(
         clean_url,
+        connect_args=connect_args,
         echo=False,
         future=True,
         pool_pre_ping=True
