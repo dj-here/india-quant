@@ -1,0 +1,17 @@
+{
+  "name": "Starfall Survivors",
+  "short_name": "Starfall",
+  "description": "2D Cosmic Arcade Survivor Game",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#070814",
+  "theme_color": "#070814",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    }
+  ]
+}

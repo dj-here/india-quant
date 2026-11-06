@@ -1,62 +1,31 @@
-# Dependencies
+# Node modules
 node_modules/
 .pnpm-store/
-.pnpm-debug.log*
 
-# Next.js build output
+# Next.js build
 .next/
 out/
-build/
-dist/
-
-# Testing & Coverage
-coverage/
-test-results/
-playwright-report/
-blob-report/
-*.tsbuildinfo
 
 # Environment files
 .env
 .env*.local
 !.env.example
 
-# Database & Uploads
-*.sqlite
-*.sqlite-journal
-*.db
-*.db-journal
-uploads/
-minio-data/
-backups/
-
 # Logs
-logs/
-*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
 
-# System Files
+# OS files
 .DS_Store
 Thumbs.db
-cloudflared.exe
 
-# Python Virtual Environment & Caches
-.venv/
-venv/
-__pycache__/
-*.py[cod]
-.pytest_cache/
-.coverage
+# Testing
+coverage/
+.vitest/
+*.tsbuildinfo
 
-# Stale root scraper scripts from previous session
-/*.py
-/*.json
-!package.json
-!tsconfig.json
-
-# Legacy job scrapers & scans
-*.bat
-!setup-*.bat
-freshers_daily/
+# IDEs
+.vscode/
+.idea/
