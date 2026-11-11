@@ -1,8 +1,7 @@
-# Node modules
+# Node modules & Vercel
 node_modules/
 .pnpm-store/
-
-# Next.js build
+.vercel/
 .next/
 out/
 
@@ -16,6 +15,7 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+*.log
 
 # OS files
 .DS_Store
@@ -25,7 +25,72 @@ Thumbs.db
 coverage/
 .vitest/
 *.tsbuildinfo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+.coverage.*
 
 # IDEs
 .vscode/
 .idea/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+.venv/
+venv/
+env/
+
+# Unrelated loose media and scratch files from previous tasks
+*.mp3
+*.wav
+*.mp4
+*.srt
+*.ass
+shorts_*
+*shorts*
+youtube_*
+nemo_*
+petrov_*
+trending_hot_topic*
+build_cinematic*
+build_jensen*
+build_short*
+configure_5*
+daily_shorts*
+fix_replacement*
+generate_cyber*
+master_shorts*
+render_*
+setup_permanent*
+update_topic*
+append_topics.py
+video_assets/
+client_secret*.json
+*.token.json
+
+# Local database artifacts
+*.db
+*.sqlite
+mlflow.db

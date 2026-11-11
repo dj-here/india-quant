@@ -1,34 +1,50 @@
-name: Starfall Survivors CI
+name: IndiaQuant CI Pipeline
 
 on:
   push:
-    branches: [main]
+    branches: [main, develop]
   pull_request:
-    branches: [main]
+    branches: [main, develop]
 
 jobs:
-  test-and-build:
-    name: Lint, Test & Build
+  quality-and-tests:
+    name: Lint, Typecheck & Quant Tests
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        python-version: ["3.11"]
+
     steps:
-      - name: Checkout repository
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js 20
-        uses: actions/setup-node@v4
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
         with:
-          node-version: 20
-          cache: "npm"
+          python-version: ${{ matrix.python-version }}
+          cache: "pip"
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Upgrade pip and install build tools
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
 
-      - name: Run unit & simulation tests
-        run: npm run test
+      - name: Install dependencies and package in editable mode
+        run: |
+          pip install -e ".[dev,serving,mlops]"
 
-      - name: Build Next.js production bundle
-        run: npm run build
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          AUTH_SECRET: ${{ secrets.AUTH_SECRET || 'ci-build-auth-secret-key-32-chars-long' }}
+      - name: Run Ruff Lint Checks
+        run: |
+          ruff check src tests
+
+      - name: Run Mypy Static Type Checks
+        run: |
+          mypy src/india_quant/common src/india_quant/features src/india_quant/backtest
+
+      - name: Run Strict Zero Look-Ahead Leakage Test Suite
+        run: |
+          pytest tests/test_leakage.py -v
+
+      - name: Run Full Test Suite with Coverage
+        run: |
+          pytest --cov=india_quant --cov-report=term-missing tests/ -v

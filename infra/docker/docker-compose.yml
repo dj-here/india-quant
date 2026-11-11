@@ -1,0 +1,102 @@
+version: '3.8'
+
+services:
+  # 1. TimescaleDB (PostgreSQL 16 with time-series hypertable support)
+  timescaledb:
+    image: timescale/timescaledb:latest-pg16
+    container_name: india_quant_timescaledb
+    restart: always
+    environment:
+      POSTGRES_DB: india_quant_tsdb
+      POSTGRES_USER: india_quant
+      POSTGRES_PASSWORD: india_quant_secure_pass
+      TZ: Asia/Kolkata
+    ports:
+      - "5432:5432"
+    volumes:
+      - tsdb_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U india_quant -d india_quant_tsdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 2. Redis Cache & Fast Feature Store
+  redis:
+    image: redis:7.2-alpine
+    container_name: india_quant_redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 3. MLflow Experiment & Model Registry Tracking Server
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v2.11.3
+    container_name: india_quant_mlflow
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      - MLFLOW_BACKEND_STORE_URI=sqlite:///mlflow.db
+      - MLFLOW_DEFAULT_ARTIFACT_ROOT=/artifacts
+    volumes:
+      - mlflow_data:/artifacts
+    command: >
+      mlflow server
+      --backend-store-uri sqlite:///mlflow.db
+      --default-artifact-root /artifacts
+      --host 0.0.0.0
+      --port 5000
+
+  # 4. FastAPI Inference Microservice
+  api:
+    build:
+      context: ../..
+      dockerfile: infra/docker/Dockerfile
+    container_name: india_quant_api
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - APP_ENV=development
+      - DB_HOST=timescaledb
+      - DB_PORT=5432
+      - DB_USER=india_quant
+      - DB_PASSWORD=india_quant_secure_pass
+      - DB_NAME=india_quant_tsdb
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+    depends_on:
+      timescaledb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # 5. Streamlit Trading Terminal & Analytics Dashboard
+  dashboard:
+    build:
+      context: ../..
+      dockerfile: infra/docker/Dockerfile
+    container_name: india_quant_dashboard
+    restart: always
+    ports:
+      - "8501:8501"
+    environment:
+      - API_URL=http://api:8000
+      - TZ=Asia/Kolkata
+    command: ["streamlit", "run", "src/india_quant/dashboard/app.py", "--server.port=8501", "--server.address=0.0.0.0"]
+    depends_on:
+      - api
+
+volumes:
+  tsdb_data:
+  redis_data:
+  mlflow_data:

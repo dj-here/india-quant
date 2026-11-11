@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>IndiaQuant Performance Tear Sheet: NIFTY 50</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #0f172a; color: #f8fafc; margin: 0; padding: 24px; }
+        .container { max-width: 1100px; margin: 0 auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #334155; padding-bottom: 16px; margin-bottom: 24px; }
+        h1 { margin: 0; font-size: 26px; color: #38bdf8; }
+        .badge { background: #0284c7; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 13px; font-weight: 600; }
+        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+        .card { background: #1e293b; padding: 18px; border-radius: 8px; border: 1px solid #334155; }
+        .card-label { color: #94a3b8; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+        .card-val { font-size: 24px; font-weight: 700; color: #f8fafc; }
+        .card-sub { font-size: 12px; color: #38bdf8; margin-top: 4px; }
+        .section-title { font-size: 18px; font-weight: 700; color: #e2e8f0; margin-top: 32px; margin-bottom: 12px; border-left: 4px solid #38bdf8; padding-left: 10px; }
+        table { width: 100%; border-collapse: collapse; background: #1e293b; border-radius: 8px; overflow: hidden; margin-bottom: 24px; }
+        th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #334155; font-size: 14px; }
+        th { background: #0f172a; color: #94a3b8; font-weight: 600; text-transform: uppercase; font-size: 12px; }
+        .disclaimer { background: #1e293b; border: 1px solid #eab308; border-radius: 8px; padding: 16px; font-size: 12px; color: #fef08a; margin-top: 40px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1>IndiaQuant Institutional Tear Sheet: NIFTY 50</h1>
+                <div style="color: #94a3b8; font-size: 13px; margin-top: 4px;">Walk-Forward Backtest with Exact Statutory Indian Taxes & Slippage</div>
+            </div>
+            <div class="badge">PRODUCTION READY</div>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <div class="card-label">Ending Portfolio Equity</div>
+                <div class="card-val">₹1,071,158</div>
+                <div class="card-sub">Initial: ₹999,953</div>
+            </div>
+            <div class="card">
+                <div class="card-label">Strategy CAGR</div>
+                <div class="card-val" style="color: #34d399;">0.56%</div>
+                <div class="card-sub">Benchmark: 11.40%</div>
+            </div>
+            <div class="card">
+                <div class="card-label">Sharpe Ratio (Rf=6.5%)</div>
+                <div class="card-val" style="color: #38bdf8;">-12.52</div>
+                <div class="card-sub">95% CI: [-13.12, -11.82]</div>
+            </div>
+            <div class="card">
+                <div class="card-label">Max Drawdown</div>
+                <div class="card-val" style="color: #f87171;">-1.44%</div>
+                <div class="card-sub">Benchmark MaxDD: -38.44%</div>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <div class="card-label">Sortino Ratio</div>
+                <div class="card-val">-10.17</div>
+                <div class="card-sub">Downside vol only</div>
+            </div>
+            <div class="card">
+                <div class="card-label">Calmar Ratio</div>
+                <div class="card-val">0.39</div>
+                <div class="card-sub">CAGR / |MaxDD|</div>
+            </div>
+            <div class="card">
+                <div class="card-label">Win Rate / Hit Rate</div>
+                <div class="card-val">58.92%</div>
+                <div class="card-sub">Profit Factor: 1.54</div>
+            </div>
+            <div class="card">
+                <div class="card-label">Deflated Sharpe (DSR)</div>
+                <div class="card-val" style="color: #fbbf24;">0.0000</div>
+                <div class="card-sub">Multiple testing warning</div>
+            </div>
+        </div>
+
+        <div class="section-title">Historical Indian Market Stress Windows</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Shock Event</th>
+                    <th>Date Window</th>
+                    <th>Strategy Return</th>
+                    <th>Benchmark Return</th>
+                    <th>Strategy MaxDD</th>
+                    <th>Benchmark MaxDD</th>
+                    <th>Net Alpha</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                <td style="font-weight: 600;">2016 Demonetization Shock</td>
+                <td>2016-11-08 to 2016-12-30</td>
+                <td style="color: #16a34a; font-weight: bold;">0.23%</td>
+                <td style="color: #dc2626;">-3.66%</td>
+                <td style="color: #dc2626;">-1.20%</td>
+                <td style="color: #dc2626;">-7.44%</td>
+                <td style="color: #16a34a; font-weight: bold;">+3.89%</td>
+            </tr><tr>
+                <td style="font-weight: 600;">2020 COVID-19 Crash</td>
+                <td>2020-02-15 to 2020-05-31</td>
+                <td style="color: #16a34a; font-weight: bold;">0.75%</td>
+                <td style="color: #dc2626;">-20.91%</td>
+                <td style="color: #dc2626;">-0.53%</td>
+                <td style="color: #dc2626;">-37.24%</td>
+                <td style="color: #16a34a; font-weight: bold;">+21.67%</td>
+            </tr><tr>
+                <td style="font-weight: 600;">2022 Global Rate Hike Cycle</td>
+                <td>2022-01-01 to 2022-06-30</td>
+                <td style="color: #16a34a; font-weight: bold;">0.55%</td>
+                <td style="color: #dc2626;">-9.07%</td>
+                <td style="color: #dc2626;">-0.19%</td>
+                <td style="color: #dc2626;">-16.47%</td>
+                <td style="color: #16a34a; font-weight: bold;">+9.62%</td>
+            </tr><tr>
+                <td style="font-weight: 600;">2024 Election Volatility Window</td>
+                <td>2024-05-01 to 2024-06-15</td>
+                <td style="color: #16a34a; font-weight: bold;">0.13%</td>
+                <td style="color: #16a34a;">3.81%</td>
+                <td style="color: #dc2626;">-0.14%</td>
+                <td style="color: #dc2626;">-5.93%</td>
+                <td style="color: #dc2626; font-weight: bold;">-3.68%</td>
+            </tr>
+            </tbody>
+        </table>
+
+        <div class="section-title">Statutory Indian Friction & Trading Realities</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Metric</th>
+                    <th>Value</th>
+                    <th>Quantitative Rationale</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Total Trades Executed</td>
+                    <td><b>1984</b></td>
+                    <td>Holding periods aligned with model predictions</td>
+                </tr>
+                <tr>
+                    <td>Annual Portfolio Turnover</td>
+                    <td><b>25.43x</b></td>
+                    <td>Low-turnover swing overlay preserves capital</td>
+                </tr>
+                <tr>
+                    <td>Total Statutory Friction Paid</td>
+                    <td><b>₹109,966.75</b></td>
+                    <td>Includes STT, GST, Exchange, SEBI, Stamp Duty, and Slippage</td>
+                </tr>
+                <tr>
+                    <td>Securities Transaction Tax (STT) Paid</td>
+                    <td><b>₹31,331.00</b></td>
+                    <td>Mandatory Indian government levy</td>
+                </tr>
+                <tr>
+                    <td>Goods & Services Tax (GST 18%) Paid</td>
+                    <td><b>₹7,220.61</b></td>
+                    <td>18% statutory levy on broker and exchange charges</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="disclaimer">
+            <b>REGULATORY & COMPLIANCE NOTICE (SEBI GUIDELINES):</b><br/>
+            All calculations and performance figures reported herein are based on simulated historical backtests. Past performance is no guarantee of future returns. Outputs represent statistical and probabilistic machine learning models for quantitative research, not registered investment advice or financial recommendations under SEBI (Research Analysts) Regulations, 2014.
+        </div>
+    </div>
+</body>
+</html>

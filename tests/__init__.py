@@ -1,0 +1,3 @@
+"""
+IndiaQuant automated test suite.
+"""

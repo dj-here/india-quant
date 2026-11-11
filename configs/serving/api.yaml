@@ -1,0 +1,11 @@
+host: "0.0.0.0"
+port: 8000
+workers: 4
+reload: false
+jwt_algorithm: "HS256"
+access_token_expire_minutes: 60
+rate_limit_per_minute: 120
+cors_origins:
+  - "http://localhost:3000"
+  - "http://localhost:8501"
+cache_ttl_seconds: 60

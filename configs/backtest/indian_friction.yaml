@@ -1,0 +1,41 @@
+initial_capital: 1000000.0  # ₹10 Lakhs
+target_annual_volatility: 0.14  # 14% Volatility Target
+kelly_fraction: 0.5            # Half-Kelly sizing
+max_drawdown_limit: 0.15       # 15% Max DD hard stop
+max_single_position_pct: 0.10  # 10% max allocation per instrument
+max_sector_pct: 0.25           # 25% max sector concentration
+
+# Statutory Indian Taxes & Exchange Levies
+brokerage:
+  equity_delivery_pct: 0.0
+  equity_intraday_pct: 0.0003
+  equity_intraday_cap_inr: 20.0
+  futures_pct: 0.0003
+  futures_cap_inr: 20.0
+  options_per_order_inr: 20.0
+
+stt:
+  equity_delivery_buy_pct: 0.001
+  equity_delivery_sell_pct: 0.001
+  equity_intraday_sell_pct: 0.00025
+  futures_sell_pct: 0.0002
+  options_sell_premium_pct: 0.000625
+
+exchange_txn_fee:
+  equity_pct: 0.0000325
+  futures_pct: 0.000019
+  options_pct: 0.0005
+
+sebi_turnover_pct: 0.000001  # ₹10 per crore
+
+stamp_duty:
+  equity_delivery_buy_pct: 0.00015
+  equity_intraday_buy_pct: 0.00003
+  futures_buy_pct: 0.00002
+  options_buy_pct: 0.00003
+
+gst_pct: 0.18  # 18% on Brokerage + Exchange + SEBI
+
+slippage:
+  fixed_bps: 5.0
+  market_impact_exponent: 0.5

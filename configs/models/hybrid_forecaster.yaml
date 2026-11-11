@@ -1,0 +1,26 @@
+primary_architecture: "lightgbm_quantile"
+quantiles: [0.05, 0.10, 0.25, 0.50, 0.75, 0.90, 0.95]
+
+lightgbm:
+  n_estimators: 300
+  learning_rate: 0.03
+  max_depth: 6
+  num_leaves: 31
+  subsample: 0.8
+  colsample_bytree: 0.8
+  min_child_samples: 25
+  random_state: 42
+
+validation:
+  scheme: "purged_walk_forward"
+  n_splits: 5
+  train_years: 3
+  test_months: 6
+  embargo_days: 5
+  purge_overlap: true
+
+uncertainty:
+  method: "conformal_prediction"
+  confidence_level: 0.90
+  abstain_zone: [0.47, 0.53]
+  max_interval_spread_pct: 0.08

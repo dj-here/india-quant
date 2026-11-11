@@ -1,0 +1,36 @@
+primary_broker: "kite"
+fallback_provider: "mock"
+
+indices:
+  - "NIFTY 50"
+  - "NIFTY BANK"
+  - "FINNIFTY"
+  - "NIFTY IT"
+  - "NIFTY MIDCAP 100"
+  - "SENSEX"
+  - "INDIA VIX"
+
+macro_tickers:
+  usdinr: "USDINR=X"
+  brent_crude: "BZ=F"
+  us_10y: "^TNX"
+  dxy: "DX-Y.NYB"
+  sp500_fut: "ES=F"
+  gift_nifty: "^NSEIX"
+
+timings:
+  pre_open_start: "09:00:00"
+  market_open: "09:15:00"
+  market_close: "15:30:00"
+  post_market_close: "16:00:00"
+  timezone: "Asia/Kolkata"
+
+storage:
+  lake_root: "./data/lake"
+  db_table_prefix: "nse_"
+  compression: "snappy"
+
+quality_gates:
+  max_missing_bar_fraction: 0.02
+  max_unexplained_jump: 0.20
+  enforce_strict_ohlc_invariants: true

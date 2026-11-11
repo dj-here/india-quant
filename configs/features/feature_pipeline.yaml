@@ -1,0 +1,27 @@
+returns_lags: [1, 2, 3, 5, 10, 20]
+volatility_windows: [5, 10, 20, 60]
+moving_averages: [9, 21, 50, 200]
+rsi_period: 14
+macd_params:
+  fast: 12
+  slow: 26
+  signal: 9
+atr_period: 14
+
+microstructure:
+  enable_delivery_pct: true
+  enable_pcr_indicators: true
+  enable_max_pain: true
+  enable_fii_dii_flows: true
+  enable_iv_skew: true
+
+targets:
+  direction:
+    enabled: true
+    threshold: 0.0
+  high_log_ratio:
+    enabled: true
+  low_log_ratio:
+    enabled: true
+  forward_returns_days: [1, 5, 20]
+  intraday_horizons_bars: [1, 4]  # 15m or 1h steps

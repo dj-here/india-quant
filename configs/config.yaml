@@ -1,0 +1,14 @@
+defaults:
+  - _self_
+  - data: nse_defaults
+  - features: feature_pipeline
+  - models: hybrid_forecaster
+  - backtest: indian_friction
+  - serving: api
+
+app:
+  name: "IndiaQuant"
+  version: "0.1.0"
+  timezone: "Asia/Kolkata"
+  log_level: "INFO"
+  seed: 42
