@@ -16,7 +16,6 @@
     }
   ],
   "env": {
-    "APP_ENV": "production",
-    "TZ": "Asia/Kolkata"
+    "APP_ENV": "production"
   }
 }
