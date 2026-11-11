@@ -1,0 +1,8 @@
+tests/
+docs/
+infra/
+Makefile
+.github/
+data/lake/reports/
+*.html
+*.md

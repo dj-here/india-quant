@@ -113,7 +113,20 @@ class ModelRegistry:
             if entry.symbol == symbol and entry.stage == "PRODUCTION":
                 path = Path(entry.artifact_path)
                 if path.exists():
-                    return joblib.load(path)
+                    try:
+                        return joblib.load(path)
+                    except Exception as ex:
+                        logger.warning(f"Failed to load production model from {path}: {ex}")
+
+        # Fallback to any loadable model for this symbol (e.g. LightGBM on serverless runtimes)
+        for entry in self._entries.values():
+            if entry.symbol == symbol:
+                path = Path(entry.artifact_path)
+                if path.exists():
+                    try:
+                        return joblib.load(path)
+                    except Exception:
+                        pass
         return None
 
     def list_models(self) -> List[RegisteredModelEntry]:

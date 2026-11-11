@@ -114,23 +114,26 @@ class NeonDataStore:
     """
 
     def __init__(self, connection_url: Optional[str] = None):
-        self.url = connection_url or os.getenv("NEON_DATABASE_URL") or os.getenv("DATABASE_URL")
-        if not self.url:
-            for env_path in [Path(".env"), Path(__file__).resolve().parent.parent.parent.parent / ".env"]:
-                if env_path.exists():
-                    try:
-                        with open(env_path, "r", encoding="utf-8") as f:
-                            for line in f:
-                                line = line.strip()
-                                if line.startswith("NEON_DATABASE_URL="):
-                                    self.url = line.split("=", 1)[1].strip().strip('"').strip("'")
-                                    break
-                                elif line.startswith("DATABASE_URL=") and not self.url:
-                                    self.url = line.split("=", 1)[1].strip().strip('"').strip("'")
-                    except Exception:
-                        pass
-                if self.url:
-                    break
+        if connection_url is not None:
+            self.url = connection_url
+        else:
+            self.url = os.getenv("NEON_DATABASE_URL") or os.getenv("DATABASE_URL")
+            if not self.url:
+                for env_path in [Path(".env"), Path(__file__).resolve().parent.parent.parent.parent / ".env"]:
+                    if env_path.exists():
+                        try:
+                            with open(env_path, "r", encoding="utf-8") as f:
+                                for line in f:
+                                    line = line.strip()
+                                    if line.startswith("NEON_DATABASE_URL="):
+                                        self.url = line.split("=", 1)[1].strip().strip('"').strip("'")
+                                        break
+                                    elif line.startswith("DATABASE_URL=") and not self.url:
+                                        self.url = line.split("=", 1)[1].strip().strip('"').strip("'")
+                        except Exception:
+                            pass
+                    if self.url:
+                        break
 
         if self.url and "sslmode" not in self.url:
             separator = "&" if "?" in self.url else "?"

@@ -10,12 +10,23 @@ from typing import Dict, List, Optional, Tuple
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
-import torch
-import torch.nn as nn
-from torch.utils.data import DataLoader, TensorDataset
+
+try:
+    import torch
+    import torch.nn as nn
+    from torch.utils.data import DataLoader, TensorDataset
+    HAS_TORCH = True
+    _BaseModule = nn.Module
+except ImportError:
+    torch = None
+    nn = None
+    DataLoader = None
+    TensorDataset = None
+    HAS_TORCH = False
+    _BaseModule = object
 
 
-class _MultiTaskLSTMNetwork(nn.Module):
+class _MultiTaskLSTMNetwork(_BaseModule):
     """PyTorch multi-task recurrent sequence architecture."""
 
     def __init__(self, input_dim: int, hidden_dim: int = 64, num_layers: int = 2, dropout: float = 0.2):
