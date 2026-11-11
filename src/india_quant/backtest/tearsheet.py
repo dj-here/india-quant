@@ -21,7 +21,10 @@ class TearSheetGenerator:
 
     def __init__(self, output_dir: str = "./data/lake/reports"):
         self.output_dir = Path(output_dir)
-        self.output_dir.mkdir(parents=True, exist_ok=True)
+        try:
+            self.output_dir.mkdir(parents=True, exist_ok=True)
+        except OSError:
+            pass
 
     def generate_html_tearsheet(
         self,

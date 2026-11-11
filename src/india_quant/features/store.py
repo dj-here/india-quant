@@ -38,7 +38,10 @@ class FeatureStore:
     def __init__(self, lake_root: str = "./data/lake"):
         self.lake_root = Path(lake_root)
         self.features_dir = self.lake_root / "features"
-        self.features_dir.mkdir(parents=True, exist_ok=True)
+        try:
+            self.features_dir.mkdir(parents=True, exist_ok=True)
+        except OSError:
+            pass
 
         self.tech_engine = TechnicalFeatureEngine()
         self.micro_engine = MicrostructureFeatureEngine()

@@ -37,7 +37,10 @@ class ModelRegistry:
 
     def __init__(self, registry_root: str = "./data/lake/models"):
         self.registry_root = Path(registry_root)
-        self.registry_root.mkdir(parents=True, exist_ok=True)
+        try:
+            self.registry_root.mkdir(parents=True, exist_ok=True)
+        except OSError:
+            pass
         self.metadata_file = self.registry_root / "registry_index.json"
         self._entries: Dict[str, RegisteredModelEntry] = self._load_index()
 

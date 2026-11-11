@@ -57,7 +57,14 @@ class AuditLogger:
 
     def __init__(self, log_dir: str = "./data/lake/audit"):
         self.log_dir = Path(log_dir)
-        self.log_dir.mkdir(parents=True, exist_ok=True)
+        try:
+            self.log_dir.mkdir(parents=True, exist_ok=True)
+        except OSError:
+            self.log_dir = Path("/tmp/india_quant/audit")
+            try:
+                self.log_dir.mkdir(parents=True, exist_ok=True)
+            except OSError:
+                pass
         self.log_file = self.log_dir / "prediction_audit_trail.jsonl"
 
     @staticmethod
@@ -115,8 +122,11 @@ class AuditLogger:
         )
 
         # Append to JSONL audit log
-        with open(self.log_file, "a", encoding="utf-8") as f:
-            f.write(json.dumps(asdict(record)) + "\n")
+        try:
+            with open(self.log_file, "a", encoding="utf-8") as f:
+                f.write(json.dumps(asdict(record)) + "\n")
+        except OSError:
+            pass
 
         return record
 

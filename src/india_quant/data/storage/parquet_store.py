@@ -40,12 +40,18 @@ class ParquetDataStore:
 
     def __init__(self, lake_root: str = "./data/lake"):
         self.lake_root = Path(lake_root)
-        self.lake_root.mkdir(parents=True, exist_ok=True)
+        try:
+            self.lake_root.mkdir(parents=True, exist_ok=True)
+        except OSError:
+            pass
 
     def _get_file_path(self, asset_class: str, symbol: str) -> Path:
         sanitized_symbol = symbol.replace("/", "_").replace("^", "").strip()
         dir_path = self.lake_root / asset_class.lower()
-        dir_path.mkdir(parents=True, exist_ok=True)
+        try:
+            dir_path.mkdir(parents=True, exist_ok=True)
+        except OSError:
+            pass
         return dir_path / f"{sanitized_symbol}.parquet"
 
     def write_ohlcv(

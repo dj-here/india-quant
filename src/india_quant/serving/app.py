@@ -77,10 +77,12 @@ def on_startup():
     """Initializes external cloud persistence connections on startup."""
     if neon_store.is_configured:
         try:
-            neon_store.init_schema()
+            with neon_store.get_connection() as conn:
+                with conn.cursor() as cur:
+                    cur.execute("SELECT 1;")
             logger.info("Connected to Neon Serverless PostgreSQL successfully.")
         except Exception as e:
-            logger.warning(f"Neon database connection failed on startup: {e}")
+            logger.warning(f"Neon database connection check on startup: {e}")
 
 
 @app.get("/", response_class=HTMLResponse, tags=["Web Terminal"])
