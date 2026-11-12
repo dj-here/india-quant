@@ -41,6 +41,7 @@ __pycache__/
 *.py[cod]
 *$py.class
 *.so
+!lib/libgomp.so.1
 .Python
 build/
 develop-eggs/
@@ -49,6 +50,8 @@ downloads/
 eggs/
 .eggs/
 lib/
+!lib/
+!lib/libgomp.so.1
 lib64/
 parts/
 sdist/

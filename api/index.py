@@ -5,6 +5,7 @@ Exposes the FastAPI application as a serverless ASGI handler.
 
 import sys
 import os
+import ctypes
 import traceback
 from pathlib import Path
 
@@ -12,10 +13,23 @@ from pathlib import Path
 CURRENT_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = CURRENT_DIR.parent
 SRC_DIR = PROJECT_ROOT / "src"
+LIB_DIR = PROJECT_ROOT / "lib"
 
 for path in [str(PROJECT_ROOT), str(SRC_DIR)]:
     if path not in sys.path:
         sys.path.insert(0, path)
+
+# Preload libgomp.so.1 for OpenMP runtime on AWS Lambda / Vercel Serverless
+if sys.platform != "win32":
+    os.environ["LD_LIBRARY_PATH"] = f"{str(LIB_DIR)}:{os.environ.get('LD_LIBRARY_PATH', '')}"
+
+    for _lib_cand in [LIB_DIR / "libgomp.so.1", Path("/var/task/lib/libgomp.so.1")]:
+        if _lib_cand.exists():
+            try:
+                ctypes.CDLL(str(_lib_cand))
+                break
+            except Exception as _e:
+                print(f"Notice: Preload {_lib_cand} returned: {_e}", file=sys.stderr)
 
 try:
     from india_quant.serving.app import app as _fastapi_app, serve_web_terminal

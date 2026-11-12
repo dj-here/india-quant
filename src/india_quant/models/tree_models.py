@@ -7,8 +7,32 @@ Predicts:
 4. Abstention Gate (abstain when model confidence is low or interval is excessively wide).
 """
 
-from typing import Dict, List, Optional, Tuple
-import lightgbm as lgb
+from typing import Any, Dict, List, Optional, Tuple
+import ctypes
+import os
+import sys
+from pathlib import Path
+
+# Preload libgomp if available on Linux (for serverless environments without system OpenMP)
+if sys.platform != "win32":
+    for _lib_cand in [
+        Path(__file__).resolve().parent.parent.parent.parent / "lib" / "libgomp.so.1",
+        Path("/var/task/lib/libgomp.so.1"),
+        Path("./lib/libgomp.so.1"),
+    ]:
+        if _lib_cand.exists():
+            try:
+                ctypes.CDLL(str(_lib_cand))
+                break
+            except Exception:
+                pass
+
+try:
+    import lightgbm as lgb
+    HAS_LIGHTGBM = True
+except (ImportError, OSError):
+    lgb = None
+    HAS_LIGHTGBM = False
 import numpy as np
 import pandas as pd
 from sklearn.calibration import CalibratedClassifierCV
@@ -47,13 +71,13 @@ class LightGBMQuantileForecaster:
         self.abstain_upper = abstain_upper
         self.random_state = random_state
 
-        self.clf_direction: Optional[lgb.LGBMClassifier] = None
+        self.clf_direction: Optional[Any] = None
         self.isotonic_calibrator: Optional[IsotonicRegression] = None
-        self.quantile_models_ret: Dict[float, lgb.LGBMRegressor] = {}
-        self.model_high: Optional[lgb.LGBMRegressor] = None
-        self.model_low: Optional[lgb.LGBMRegressor] = None
-        self.model_high_90: Optional[lgb.LGBMRegressor] = None
-        self.model_low_10: Optional[lgb.LGBMRegressor] = None
+        self.quantile_models_ret: Dict[float, Any] = {}
+        self.model_high: Optional[Any] = None
+        self.model_low: Optional[Any] = None
+        self.model_high_90: Optional[Any] = None
+        self.model_low_10: Optional[Any] = None
 
     def fit(
         self,
@@ -67,6 +91,8 @@ class LightGBMQuantileForecaster:
         """
         Fits directional classifier and multi-quantile regressors for return and High/Low ratios.
         """
+        if not HAS_LIGHTGBM or lgb is None:
+            raise RuntimeError("LightGBM is not available in this runtime environment.")
         X_clean = X.fillna(0.0)
 
         # 1. Fit Direction Classifier with 3-fold cross-validated Platt scaling (sigmoid calibration)

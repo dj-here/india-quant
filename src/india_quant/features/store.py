@@ -7,7 +7,6 @@ aligns them strictly with forward targets, and provides feature importance / sta
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
-import lightgbm as lgb
 import numpy as np
 import pandas as pd
 from india_quant.common.logging import get_logger
@@ -111,6 +110,7 @@ class FeatureStore:
         """
         Computes LightGBM tree-based feature importance for target y.
         """
+        import lightgbm as lgb
         valid_mask = y.notna()
         X_clean = X.loc[valid_mask].fillna(0.0)
         y_clean = y.loc[valid_mask]
