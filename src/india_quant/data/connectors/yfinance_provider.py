@@ -9,7 +9,12 @@ from typing import Dict, List, Optional
 import numpy as np
 import pandas as pd
 import pytz
-import yfinance as yf
+try:
+    import yfinance as yf
+    HAS_YFINANCE = True
+except ImportError:
+    yf = None
+    HAS_YFINANCE = False
 from india_quant.common.logging import get_logger
 from india_quant.data.connectors.base import BaseMarketConnector
 

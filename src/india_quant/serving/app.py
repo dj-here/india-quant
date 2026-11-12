@@ -172,7 +172,7 @@ def _resolve_prediction_for_symbol(
     # 3. Predict via Model Architecture
     cur_prices_series = pd.Series([current_price], index=X_in.index)
 
-    if isinstance(model_obj, RegimeAwareEnsemble):
+    if isinstance(model_obj, (RegimeAwareEnsemble, LightGBMQuantileForecaster)):
         pred = model_obj.predict(X_in, current_prices=cur_prices_series)
         prob_win = float(pred["prob_up"][0])
         direction = int(pred["pred_dir"][0])
@@ -183,25 +183,8 @@ def _resolve_prediction_for_symbol(
         predicted_close = round(current_price * (1.0 + float(pred["pred_return_50"][0])), 2)
         conf_high = float(pred["conf_high_price"][0]) if "conf_high_price" in pred else round(predicted_high * 1.01, 2)
         conf_low = float(pred["conf_low_price"][0]) if "conf_low_price" in pred else round(predicted_low * 0.99, 2)
-        q_low = float(pred["conf_ret_low"][0])
-        q_high = float(pred["conf_ret_high"][0])
-    elif isinstance(model_obj, LightGBMQuantileForecaster):
-        prob_win = float(model_obj.predict_win_probability(X_in)[0])
-        direction = 1 if prob_win >= 0.50 else 0
-        abstain = bool(0.48 <= prob_win <= 0.52)
-        abstain_reason = "Probabilistic uncertainty around 50%" if abstain else None
-        bounds = model_obj.predict_high_low_bounds(X_in, current_price)
-        predicted_high = float(bounds["predicted_high"].iloc[0])
-        predicted_low = float(bounds["predicted_low"].iloc[0])
-        q_df = model_obj.predict_quantiles(X_in)
-        q50 = float(q_df[0.50].iloc[0])
-        q10 = float(q_df[0.10].iloc[0])
-        q90 = float(q_df[0.90].iloc[0])
-        predicted_close = current_price * (1.0 + q50)
-        conf_high = current_price * (1.0 + q90)
-        conf_low = current_price * (1.0 + q10)
-        q_low = q10
-        q_high = q90
+        q_low = float(pred.get("conf_ret_low", [-0.01])[0])
+        q_high = float(pred.get("conf_ret_high", [0.01])[0])
     else:
         # Generic fallback
         prob_win = 0.52

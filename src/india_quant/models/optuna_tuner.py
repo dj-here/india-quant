@@ -3,17 +3,22 @@ Optuna Bayesian Hyperparameter Optimization under Purged Walk-Forward Cross-Vali
 Tunes LightGBM parameters to minimize out-of-sample Brier score and Pinball loss with zero look-ahead bias.
 """
 
-from typing import Dict, Tuple
+from __future__ import annotations
+from typing import Any, Dict, Tuple
 import numpy as np
-import optuna
 import pandas as pd
 from india_quant.common.logging import get_logger
 from india_quant.models.evaluation import ModelEvaluator
 from india_quant.models.tree_models import LightGBMQuantileForecaster
 from india_quant.models.validation import PurgedWalkForwardCV
 
-# Suppress verbose Optuna logging
-optuna.logging.set_verbosity(optuna.logging.WARNING)
+try:
+    import optuna
+    HAS_OPTUNA = True
+    optuna.logging.set_verbosity(optuna.logging.WARNING)
+except ImportError:
+    optuna = None
+    HAS_OPTUNA = False
 logger = get_logger("OptunaTuner")
 
 
@@ -32,9 +37,11 @@ class WalkForwardHyperparameterTuner:
         """
         Executes Optuna study minimizing composite out-of-sample loss: (Brier Score + 10 * Pinball Loss).
         """
+        if not HAS_OPTUNA or optuna is None:
+            raise RuntimeError("Optuna is not installed in this environment.")
         logger.info(f"Starting Optuna walk-forward hyperparameter search ({self.n_trials} trials, {self.n_splits} folds)...")
 
-        def objective(trial: optuna.Trial) -> float:
+        def objective(trial: Any) -> float:
             num_leaves = trial.suggest_int("num_leaves", 15, 45)
             max_depth = trial.suggest_int("max_depth", 3, 7)
             learning_rate = trial.suggest_float("learning_rate", 0.015, 0.08, log=True)

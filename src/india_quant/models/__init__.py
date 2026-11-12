@@ -12,7 +12,10 @@ from india_quant.models.tree_models import LightGBMQuantileForecaster
 from india_quant.models.conformal import ConformalPredictionEngine
 from india_quant.models.deep_models import LSTMSequenceForecaster
 from india_quant.models.ensemble import RegimeAwareEnsemble
-from india_quant.models.optuna_tuner import WalkForwardHyperparameterTuner
+try:
+    from india_quant.models.optuna_tuner import WalkForwardHyperparameterTuner
+except ImportError:
+    WalkForwardHyperparameterTuner = None
 from india_quant.models.evaluation import ModelEvaluator, ModelEvaluationReport
 from india_quant.models.registry import ModelRegistry, RegisteredModelEntry
 
