@@ -18,13 +18,15 @@ for path in [str(PROJECT_ROOT), str(SRC_DIR)]:
         sys.path.insert(0, path)
 
 try:
-    from india_quant.serving.app import app, serve_web_terminal
+    from india_quant.serving.app import app as _fastapi_app, serve_web_terminal
 
     # Add explicit route aliases for /api/index in case of direct rewrite hit
-    @app.get("/api/index", include_in_schema=False)
-    @app.get("/api/index/", include_in_schema=False)
+    @_fastapi_app.get("/api/index", include_in_schema=False)
+    @_fastapi_app.get("/api/index/", include_in_schema=False)
     def vercel_root_alias():
         return serve_web_terminal()
+
+    _app_instance = _fastapi_app
 
 except Exception as e:
     err_trace = traceback.format_exc()
@@ -33,7 +35,7 @@ except Exception as e:
     from fastapi import FastAPI
     from fastapi.responses import HTMLResponse
 
-    app = FastAPI(title="IndiaQuant Emergency Fallback")
+    _fallback_app = FastAPI(title="IndiaQuant Emergency Fallback")
 
     error_html = (
         "<!DOCTYPE html>"
@@ -47,10 +49,17 @@ except Exception as e:
         "</body></html>"
     )
 
-    @app.get("/", response_class=HTMLResponse)
+    @_fallback_app.get("/", response_class=HTMLResponse)
     def root_error():
         return HTMLResponse(content=error_html, status_code=500)
 
-    @app.api_route("/{full_path:path}", methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"], response_class=HTMLResponse)
+    @_fallback_app.api_route("/{full_path:path}", methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"], response_class=HTMLResponse)
     def catch_all_error(full_path: str = ""):
         return HTMLResponse(content=error_html, status_code=500)
+
+    _app_instance = _fallback_app
+
+# Top-level ASGI entrypoints explicitly detected by Vercel Python runtime AST scanner
+app = _app_instance
+application = app
+handler = app
