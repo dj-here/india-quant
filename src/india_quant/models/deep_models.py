@@ -6,7 +6,8 @@ Implements a multi-task Bidirectional LSTM architecture predicting:
 3. Next-Day High and Low log-ratios with monotonic bounds.
 """
 
-from typing import Dict, List, Optional, Tuple
+from __future__ import annotations
+from typing import Any, Dict, List, Optional, Tuple
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
@@ -31,6 +32,8 @@ class _MultiTaskLSTMNetwork(_BaseModule):
 
     def __init__(self, input_dim: int, hidden_dim: int = 64, num_layers: int = 2, dropout: float = 0.2):
         super().__init__()
+        if not HAS_TORCH or nn is None:
+            return
         self.lstm = nn.LSTM(
             input_size=input_dim,
             hidden_size=hidden_dim,
@@ -53,7 +56,7 @@ class _MultiTaskLSTMNetwork(_BaseModule):
         self.head_high = nn.Sequential(nn.Linear(64, 1), nn.Softplus())  # Strictly >= 0
         self.head_low = nn.Sequential(nn.Linear(64, 1), nn.Softplus())   # Will be negated <= 0
 
-    def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+    def forward(self, x: Any) -> Tuple[Any, Any, Any, Any]:
         out, _ = self.lstm(x)
         # Take final sequence state
         last_hidden = out[:, -1, :]
@@ -92,7 +95,11 @@ class LSTMSequenceForecaster:
 
         self.scaler = StandardScaler()
         self.net: Optional[_MultiTaskLSTMNetwork] = None
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = (
+            torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            if HAS_TORCH and torch is not None
+            else "cpu"
+        )
 
     def _create_sequences(
         self,
@@ -128,6 +135,8 @@ class LSTMSequenceForecaster:
         y_high: pd.Series,
         y_low: pd.Series,
     ):
+        if not HAS_TORCH or torch is None:
+            return self
         X_clean = X.fillna(0.0).values
         X_scaled = self.scaler.fit_transform(X_clean)
 
@@ -197,7 +206,7 @@ class LSTMSequenceForecaster:
 
     def predict(self, X: pd.DataFrame, current_prices: Optional[pd.Series] = None) -> Dict[str, np.ndarray]:
         n = len(X)
-        if self.net is None:
+        if self.net is None or not HAS_TORCH or torch is None:
             return {
                 "prob_up": np.full(n, 0.50),
                 "pred_dir": np.zeros(n, dtype=int),
