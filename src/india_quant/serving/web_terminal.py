@@ -355,7 +355,7 @@ HTML_TERMINAL = """<!DOCTYPE html>
       <h1>🏛️ IndiaQuant Market Predictor</h1>
       <span class="badge badge-live">NSE / BSE / MCX</span>
       <span class="badge badge-neon" id="neon-badge">NEON POSTGRES: SYNCED</span>
-      <span class="badge badge-mcx">65+ ASSETS ONLINE</span>
+      <span class="badge badge-mcx">100+ STOCKS & UNIVERSAL LOOKUP (2000+ NSE/BSE)</span>
     </div>
     <div class="status-bar">
       <span>India Market: <strong id="market-status" class="text-green">TRADING ACTIVE (IST)</strong></span>
@@ -382,14 +382,14 @@ HTML_TERMINAL = """<!DOCTYPE html>
     <div class="breadth-item">
       <span>India VIX: <strong id="vix-val" class="text-amber">13.80 (-2.1%)</strong></span>
     </div>
-    <button class="btn-action" onclick="runMarketScan()">⚡ SCAN ALL 65 ASSETS</button>
+    <button class="btn-action" onclick="runMarketScan()">⚡ SCAN ENTIRE MARKET</button>
   </div>
 
   <!-- Asset Category Filter Tabs -->
   <div class="category-nav">
-    <button class="cat-btn active" onclick="switchCategory('all', this)">🌐 All Market (65)</button>
+    <button class="cat-btn active" onclick="switchCategory('all', this)">🌐 All Market (130+)</button>
     <button class="cat-btn" onclick="switchCategory('indices', this)">📊 Indices (18)</button>
-    <button class="cat-btn" onclick="switchCategory('equities', this)">⚡ F&O Equities (32)</button>
+    <button class="cat-btn" onclick="switchCategory('equities', this)">⚡ Indian Stocks (100+)</button>
     <button class="cat-btn" onclick="switchCategory('commodities', this)">🪙 MCX Commodities (9)</button>
     <button class="cat-btn" onclick="switchCategory('currencies', this)">💱 Currencies & Macro (6)</button>
   </div>
@@ -401,7 +401,7 @@ HTML_TERMINAL = """<!DOCTYPE html>
       <!-- Top Forecast KPI Bar for Selected Asset -->
       <div class="card">
         <div class="card-title">
-          <div class="controls-bar">
+          <div class="controls-bar" style="flex-wrap: wrap; width: 100%;">
             <span>Asset:</span>
             <select id="symbol-select" class="select-asset" onchange="selectAsset(this.value)">
               <!-- Populated dynamically via /api/v1/market/universe -->
@@ -412,7 +412,11 @@ HTML_TERMINAL = """<!DOCTYPE html>
               <option value="RELIANCE">RELIANCE (NSE Heavyweight)</option>
               <option value="USDINR">USDINR (Forex)</option>
             </select>
-            <input type="text" id="asset-search" class="search-box" placeholder="Search 65+ assets..." oninput="filterAssets(this.value)">
+            <input type="text" id="asset-search" class="search-box" placeholder="Filter tracked list..." oninput="filterAssets(this.value)">
+            <div style="display: flex; gap: 6px; align-items: center; margin-left: auto;">
+              <input type="text" id="custom-stock-input" class="search-box" style="width: 250px; border: 1px solid var(--accent-cyan);" placeholder="Type ANY Stock (e.g. HAL, SUZLON, TRENT)..." onkeydown="if(event.key==='Enter') lookupCustomStock()">
+              <button class="btn-action" style="background: linear-gradient(135deg, #0284c7, #06b6d4);" onclick="lookupCustomStock()">🔍 PREDICT ANY STOCK</button>
+            </div>
           </div>
           <span id="model-tag" class="text-cyan" style="font-size: 0.75rem; font-family: 'JetBrains Mono', monospace;">
             Conformal 90% Monotonic Projection
@@ -709,10 +713,37 @@ HTML_TERMINAL = """<!DOCTYPE html>
       }
     }
 
-    // Select Asset
+    // Lookup ANY Indian Stock (2000+ NSE/BSE)
+    async function lookupCustomStock() {
+      const input = document.getElementById("custom-stock-input");
+      let sym = (input.value || "").trim().toUpperCase();
+      if (!sym) return;
+
+      document.getElementById("spot-price").textContent = "Analyzing " + sym + "...";
+      document.getElementById("win-prob").textContent = "...";
+      selectAsset(sym);
+    }
+
+    // Select Asset with Dynamic Auto-Addition
     function selectAsset(sym) {
       activeSymbol = sym;
-      document.getElementById("symbol-select").value = sym;
+      const sel = document.getElementById("symbol-select");
+      let found = false;
+      for (let i = 0; i < sel.options.length; i++) {
+        if (sel.options[i].value === sym) {
+          sel.selectedIndex = i;
+          found = true;
+          break;
+        }
+      }
+      if (!found) {
+        const opt = document.createElement("option");
+        opt.value = sym;
+        opt.textContent = `${sym} (Dynamic Stock)`;
+        opt.selected = true;
+        sel.prepend(opt);
+        sel.selectedIndex = 0;
+      }
       loadChartData(sym);
     }
 

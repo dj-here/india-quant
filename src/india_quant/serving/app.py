@@ -197,8 +197,8 @@ def _resolve_prediction_for_symbol(
         except Exception as e:
             logger.warning(f"Bundle inference failed for {symbol}: {e}, falling back to market predictor")
 
-    # 2. Comprehensive Multi-Asset Market Predictor Engine across all 65+ assets
-    p = market_predictor.predict_asset(symbol)
+    # 2. Comprehensive Multi-Asset Market Predictor Engine across all 130+ assets and dynamic stocks
+    p = market_predictor.predict_asset(symbol, fetch_live=True)
     now_ist = p.timestamp_ist
 
     if neon_store.is_configured:
@@ -271,7 +271,7 @@ def predict_direction_and_range(request: PredictionRequest):
 
 @app.get("/api/v1/market/universe", tags=["Market Universe"])
 def get_market_universe():
-    """Returns canonical catalog of all 65+ tracked Indian market assets across Indices, F&O Equities, Commodities, and Currencies."""
+    """Returns canonical catalog of 130+ tracked Indian market assets across Indices, F&O Equities, Commodities, and Currencies."""
     return [
         {
             "symbol": a.symbol,
@@ -284,6 +284,32 @@ def get_market_universe():
         }
         for a in MARKET_UNIVERSE.values()
     ]
+
+
+@app.get("/api/v1/market/search", tags=["Market Universe"])
+def search_market_symbols(q: str = Query(default="", min_length=1)):
+    """Searches across all tracked and dynamic Indian stock, index, commodity, and forex tickers."""
+    q_lower = q.lower().strip()
+    matches = []
+    for a in MARKET_UNIVERSE.values():
+        if q_lower in a.symbol.lower() or q_lower in a.name.lower() or q_lower in a.sector.lower():
+            matches.append({
+                "symbol": a.symbol,
+                "name": a.name,
+                "asset_class": a.asset_class.value,
+                "sector": a.sector,
+                "exchange": a.exchange,
+            })
+    if not any(m["symbol"].lower() == q_lower for m in matches):
+        clean_sym = q.upper().strip()
+        matches.insert(0, {
+            "symbol": clean_sym,
+            "name": f"{clean_sym} (NSE Dynamic Equity)",
+            "asset_class": "EQUITY_FUTURE",
+            "sector": "Indian Equities",
+            "exchange": "NSE",
+        })
+    return {"query": q, "count": len(matches), "results": matches[:20]}
 
 
 @app.get("/api/v1/market/scan", tags=["Market Universe"])
@@ -314,8 +340,18 @@ def get_chart_data(symbol: str, bars_count: int = Query(default=120, ge=20, le=5
     except Exception:
         df = pd.DataFrame()
 
+    # 2. Universal Live Market Feed fallback for ANY Indian stock
     if df is None or df.empty:
-        # Fallback synthetic generation if dataset not yet cached
+        try:
+            from india_quant.data.live_market_feed import fetch_live_ohlcv
+            df_live = fetch_live_ohlcv(symbol)
+            if df_live is not None and not df_live.empty:
+                df = df_live
+        except Exception as e:
+            logger.debug(f"Live chart fetch for {symbol}: {e}")
+
+    # 3. Fallback synthetic generation if dataset not reachable
+    if df is None or df.empty:
         asset_def = get_asset_def(symbol)
         base = asset_def.base_price if asset_def else 1000.0
         vol = (asset_def.volatility_annual if asset_def else 0.20) / np.sqrt(252)
@@ -351,8 +387,8 @@ def get_chart_data(symbol: str, bars_count: int = Query(default=120, ge=20, le=5
                 "close": round(float(row["close"]), 2),
             })
 
-    # 2. Compute forecast and bounds
-    pred = market_predictor.predict_asset(symbol)
+    # 4. Compute forecast and price cone bounds
+    pred = market_predictor.predict_asset(symbol, fetch_live=True)
     f_dict = asdict(pred)
     f_dict["conformal_high"] = pred.conformal_high_bound
     f_dict["conformal_low"] = pred.conformal_low_bound

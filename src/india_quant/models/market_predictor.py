@@ -87,9 +87,10 @@ class ComprehensiveMarketPredictor:
         self.neon_store = NeonDataStore()
         self.audit_logger = AuditLogger()
 
-    def predict_asset(self, symbol: str) -> MarketAssetPrediction:
+    def predict_asset(self, symbol: str, fetch_live: bool = False) -> MarketAssetPrediction:
         """
         Generates calibrated directional probabilities and next-day price bounds for a single asset.
+        If fetch_live is True and features are not cached, fetches live real-time candles from Yahoo Finance.
         """
         asset = get_asset_def(symbol)
         if not asset:
@@ -105,18 +106,50 @@ class ComprehensiveMarketPredictor:
 
         now_ist = datetime.now(tz=IST).isoformat()
 
-        # Load cached features or default
+        # 1. Attempt to load from feature store
+        loaded = False
         try:
             df_feat = self.feature_store.load_features(symbol)
-            latest = df_feat.iloc[[-1]].copy()
-            cur_price = float(latest["close"].iloc[0])
-            prev_price = float(df_feat["close"].iloc[-2]) if len(df_feat) > 1 else cur_price
-            change_1d = round(((cur_price - prev_price) / prev_price) * 100.0, 2)
-            regime = int(latest["regime"].iloc[0]) if "regime" in latest.columns else 0
-            rsi = float(latest["rsi_14"].iloc[0]) if "rsi_14" in latest.columns else 52.0
-            macd = float(latest["macd"].iloc[0]) if "macd" in latest.columns else 0.5
-            vol_20d = float(latest["vol_realized_20d"].iloc[0]) if "vol_realized_20d" in latest.columns else asset.volatility_annual
+            if not df_feat.empty:
+                latest = df_feat.iloc[[-1]].copy()
+                cur_price = float(latest["close"].iloc[0])
+                prev_price = float(df_feat["close"].iloc[-2]) if len(df_feat) > 1 else cur_price
+                change_1d = round(((cur_price - prev_price) / prev_price) * 100.0, 2)
+                regime = int(latest["regime"].iloc[0]) if "regime" in latest.columns else 0
+                rsi = float(latest["rsi_14"].iloc[0]) if "rsi_14" in latest.columns else 52.0
+                macd = float(latest["macd"].iloc[0]) if "macd" in latest.columns else 0.5
+                vol_20d = float(latest["vol_realized_20d"].iloc[0]) if "vol_realized_20d" in latest.columns else asset.volatility_annual
+                loaded = True
         except Exception:
+            loaded = False
+
+        # 2. Universal Live Market Feed for ANY Indian stock / ticker (on-demand)
+        if not loaded and fetch_live:
+            try:
+                from india_quant.data.live_market_feed import fetch_live_ohlcv
+                df_live = fetch_live_ohlcv(symbol)
+                if df_live is not None and not df_live.empty:
+                    closes = df_live["close"].to_numpy()
+                    cur_price = float(closes[-1])
+                    prev_price = float(closes[-2]) if len(closes) > 1 else cur_price
+                    change_1d = round(((cur_price - prev_price) / prev_price) * 100.0, 2)
+                    delta = np.diff(closes)
+                    gain = np.where(delta > 0, delta, 0)
+                    loss = np.where(delta < 0, -delta, 0)
+                    avg_g = float(np.mean(gain[-14:])) if len(gain) >= 14 else float(np.mean(gain) if len(gain) > 0 else 0.5)
+                    avg_l = float(np.mean(loss[-14:])) if len(loss) >= 14 else float(np.mean(loss) if len(loss) > 0 else 0.5)
+                    rs = avg_g / max(avg_l, 1e-6)
+                    rsi = float(100.0 - (100.0 / (1.0 + rs)))
+                    macd = float(np.mean(closes[-12:]) - np.mean(closes[-26:])) if len(closes) >= 26 else 0.5
+                    ret_diff = np.diff(np.log(np.maximum(closes[-21:], 1e-6)))
+                    vol_20d = float(np.std(ret_diff) * np.sqrt(252)) if len(ret_diff) > 2 else asset.volatility_annual
+                    regime = 2 if vol_20d > 0.35 else (0 if rsi > 50 else 1)
+                    loaded = True
+            except Exception as e:
+                logger.debug(f"Live fetch fallback error for {symbol}: {e}")
+
+        # 3. Model baseline fallback if asset offline
+        if not loaded:
             cur_price = asset.base_price
             change_1d = 0.35
             regime = 0

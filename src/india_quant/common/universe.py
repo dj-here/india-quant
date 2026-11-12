@@ -664,6 +664,122 @@ MARKET_UNIVERSE: Dict[str, AssetDefinition] = {
         volatility_annual=0.20,
     ),
 
+    # --- Defense, Aerospace & PSUs ---
+    "HAL": AssetDefinition(symbol="HAL", name="Hindustan Aeronautics Ltd", asset_class=AssetClass.EQUITY_FUTURE, sector="Defense / Aerospace", exchange="NSE", lot_size=150, base_price=4980.0, volatility_annual=0.32),
+    "BEL": AssetDefinition(symbol="BEL", name="Bharat Electronics Ltd", asset_class=AssetClass.EQUITY_FUTURE, sector="Defense / Electronics", exchange="NSE", lot_size=2850, base_price=404.0, volatility_annual=0.30),
+    "BHEL": AssetDefinition(symbol="BHEL", name="Bharat Heavy Electricals Ltd", asset_class=AssetClass.EQUITY_FUTURE, sector="Power / Heavy Electricals", exchange="NSE", lot_size=2625, base_price=428.0, volatility_annual=0.38),
+    "MAZDOCK": AssetDefinition(symbol="MAZDOCK", name="Mazagon Dock Shipbuilders", asset_class=AssetClass.EQUITY_FUTURE, sector="Defense / Shipbuilders", exchange="NSE", lot_size=200, base_price=4350.0, volatility_annual=0.42),
+    "COCHINSHIP": AssetDefinition(symbol="COCHINSHIP", name="Cochin Shipyard Ltd", asset_class=AssetClass.EQUITY_FUTURE, sector="Defense / Shipbuilding", exchange="NSE", lot_size=350, base_price=1620.0, volatility_annual=0.45),
+
+    # --- Renewable Energy & Power ---
+    "SUZLON": AssetDefinition(symbol="SUZLON", name="Suzlon Energy Ltd", asset_class=AssetClass.EQUITY_FUTURE, sector="Renewable Wind Energy", exchange="NSE", lot_size=5000, base_price=38.60, volatility_annual=0.55),
+    "TATAPOWER": AssetDefinition(symbol="TATAPOWER", name="Tata Power Company Ltd", asset_class=AssetClass.EQUITY_FUTURE, sector="Power Generation", exchange="NSE", lot_size=1650, base_price=445.0, volatility_annual=0.28),
+    "IREDA": AssetDefinition(symbol="IREDA", name="Indian Renewable Energy Dev Agency", asset_class=AssetClass.EQUITY_FUTURE, sector="Green Energy Financing", exchange="NSE", lot_size=2000, base_price=220.0, volatility_annual=0.48),
+    "NHPC": AssetDefinition(symbol="NHPC", name="NHPC Ltd (Hydro Power)", asset_class=AssetClass.EQUITY_FUTURE, sector="Renewable Hydro Power", exchange="NSE", lot_size=5000, base_price=96.0, volatility_annual=0.34),
+    "SJVN": AssetDefinition(symbol="SJVN", name="SJVN Ltd (Hydro/Solar Power)", asset_class=AssetClass.EQUITY_FUTURE, sector="Renewable Power", exchange="NSE", lot_size=4000, base_price=125.0, volatility_annual=0.36),
+    "ADANIGREEN": AssetDefinition(symbol="ADANIGREEN", name="Adani Green Energy Ltd", asset_class=AssetClass.EQUITY_FUTURE, sector="Renewable Energy", exchange="NSE", lot_size=500, base_price=1850.0, volatility_annual=0.42),
+    "ADANIPOWER": AssetDefinition(symbol="ADANIPOWER", name="Adani Power Ltd", asset_class=AssetClass.EQUITY_FUTURE, sector="Power Utility", exchange="NSE", lot_size=1200, base_price=640.0, volatility_annual=0.38),
+
+    # --- Retail, Consumption & New-Age Tech ---
+    "TRENT": AssetDefinition(symbol="TRENT", name="Trent Limited (Zudio/Westside)", asset_class=AssetClass.EQUITY_FUTURE, sector="Retail / Apparel", exchange="NSE", lot_size=200, base_price=3195.0, volatility_annual=0.32),
+    "ETERNAL": AssetDefinition(symbol="ETERNAL", name="Eternal Ltd (Zomato / Blinkit)", asset_class=AssetClass.EQUITY_FUTURE, sector="Online Delivery / Quick Commerce", exchange="NSE", lot_size=1000, base_price=365.0, volatility_annual=0.36),
+    "DMART": AssetDefinition(symbol="DMART", name="Avenue Supermarts (DMart)", asset_class=AssetClass.EQUITY_FUTURE, sector="Supermarket Retail", exchange="NSE", lot_size=150, base_price=4420.0, volatility_annual=0.22),
+    "VBL": AssetDefinition(symbol="VBL", name="Varun Beverages Ltd (PepsiCo)", asset_class=AssetClass.EQUITY_FUTURE, sector="Beverages / FMCG", exchange="NSE", lot_size=400, base_price=1520.0, volatility_annual=0.25),
+    "JUBLFOOD": AssetDefinition(symbol="JUBLFOOD", name="Jubilant FoodWorks (Domino's)", asset_class=AssetClass.EQUITY_FUTURE, sector="Quick Service Restaurants", exchange="NSE", lot_size=1250, base_price=580.0, volatility_annual=0.26),
+
+    # --- Fintech, Financial Services & Exchanges ---
+    "PAYTM": AssetDefinition(symbol="PAYTM", name="One 97 Communications (Paytm)", asset_class=AssetClass.EQUITY_FUTURE, sector="Fintech & Payments", exchange="NSE", lot_size=400, base_price=1845.0, volatility_annual=0.50),
+    "JIOFIN": AssetDefinition(symbol="JIOFIN", name="Jio Financial Services Ltd", asset_class=AssetClass.EQUITY_FUTURE, sector="NBFC / Financial Services", exchange="NSE", lot_size=1500, base_price=232.0, volatility_annual=0.32),
+    "CHOLAFIN": AssetDefinition(symbol="CHOLAFIN", name="Cholamandalam Investment & Finance", asset_class=AssetClass.EQUITY_FUTURE, sector="Vehicle Finance / NBFC", exchange="NSE", lot_size=625, base_price=1460.0, volatility_annual=0.28),
+    "SHRIRAMFIN": AssetDefinition(symbol="SHRIRAMFIN", name="Shriram Finance Ltd", asset_class=AssetClass.EQUITY_FUTURE, sector="Commercial Vehicle NBFC", exchange="NSE", lot_size=300, base_price=3180.0, volatility_annual=0.27),
+    "MUTHOOTFIN": AssetDefinition(symbol="MUTHOOTFIN", name="Muthoot Finance (Gold Loans)", asset_class=AssetClass.EQUITY_FUTURE, sector="Gold Financing / NBFC", exchange="NSE", lot_size=375, base_price=1920.0, volatility_annual=0.24),
+    "CDSL": AssetDefinition(symbol="CDSL", name="Central Depository Services Ltd", asset_class=AssetClass.EQUITY_FUTURE, sector="Capital Market Infrastructure", exchange="NSE", lot_size=300, base_price=1620.0, volatility_annual=0.35),
+    "BSE": AssetDefinition(symbol="BSE", name="BSE Limited (Stock Exchange)", asset_class=AssetClass.EQUITY_FUTURE, sector="Stock Exchange", exchange="NSE", lot_size=200, base_price=4800.0, volatility_annual=0.45),
+    "MCX": AssetDefinition(symbol="MCX", name="Multi Commodity Exchange Ltd", asset_class=AssetClass.EQUITY_FUTURE, sector="Commodity Exchange", exchange="NSE", lot_size=200, base_price=5700.0, volatility_annual=0.38),
+
+    # --- Railways, Logistics & Infrastructure ---
+    "RVNL": AssetDefinition(symbol="RVNL", name="Rail Vikas Nigam Ltd", asset_class=AssetClass.EQUITY_FUTURE, sector="Rail Infrastructure", exchange="NSE", lot_size=1500, base_price=206.0, volatility_annual=0.45),
+    "IRFC": AssetDefinition(symbol="IRFC", name="Indian Railway Finance Corp", asset_class=AssetClass.EQUITY_FUTURE, sector="Railway Financing", exchange="NSE", lot_size=3000, base_price=85.40, volatility_annual=0.38),
+    "IRCTC": AssetDefinition(symbol="IRCTC", name="Indian Railway Catering & Tourism", asset_class=AssetClass.EQUITY_FUTURE, sector="Travel & Tourism", exchange="NSE", lot_size=875, base_price=910.0, volatility_annual=0.26),
+    "CONCOR": AssetDefinition(symbol="CONCOR", name="Container Corporation of India", asset_class=AssetClass.EQUITY_FUTURE, sector="Logistics / Rail Freight", exchange="NSE", lot_size=600, base_price=890.0, volatility_annual=0.25),
+    "GMRINFRA": AssetDefinition(symbol="GMRINFRA", name="GMR Airports Infrastructure Ltd", asset_class=AssetClass.EQUITY_FUTURE, sector="Airports & Transportation", exchange="NSE", lot_size=5000, base_price=92.0, volatility_annual=0.34),
+
+    # --- Real Estate & Construction ---
+    "DLF": AssetDefinition(symbol="DLF", name="DLF Limited", asset_class=AssetClass.EQUITY_FUTURE, sector="Real Estate", exchange="NSE", lot_size=825, base_price=766.0, volatility_annual=0.30),
+    "GODREJPROP": AssetDefinition(symbol="GODREJPROP", name="Godrej Properties Ltd", asset_class=AssetClass.EQUITY_FUTURE, sector="Real Estate", exchange="NSE", lot_size=475, base_price=2840.0, volatility_annual=0.32),
+    "OBEROIRLTY": AssetDefinition(symbol="OBEROIRLTY", name="Oberoi Realty Ltd", asset_class=AssetClass.EQUITY_FUTURE, sector="Real Estate", exchange="NSE", lot_size=400, base_price=1950.0, volatility_annual=0.28),
+    "PRESTIGE": AssetDefinition(symbol="PRESTIGE", name="Prestige Estates Projects Ltd", asset_class=AssetClass.EQUITY_FUTURE, sector="Real Estate", exchange="NSE", lot_size=500, base_price=1720.0, volatility_annual=0.35),
+    "PHOENIXLTD": AssetDefinition(symbol="PHOENIXLTD", name="The Phoenix Mills Ltd (Retail Malls)", asset_class=AssetClass.EQUITY_FUTURE, sector="Commercial Real Estate", exchange="NSE", lot_size=300, base_price=1650.0, volatility_annual=0.24),
+
+    # --- Banking Expansion (PSU & Private) ---
+    "INDUSINDBK": AssetDefinition(symbol="INDUSINDBK", name="IndusInd Bank Ltd", asset_class=AssetClass.EQUITY_FUTURE, sector="Private Banking", exchange="NSE", lot_size=500, base_price=1420.0, volatility_annual=0.28),
+    "BANKBARODA": AssetDefinition(symbol="BANKBARODA", name="Bank of Baroda", asset_class=AssetClass.EQUITY_FUTURE, sector="PSU Banking", exchange="NSE", lot_size=2925, base_price=248.0, volatility_annual=0.26),
+    "PNB": AssetDefinition(symbol="PNB", name="Punjab National Bank", asset_class=AssetClass.EQUITY_FUTURE, sector="PSU Banking", exchange="NSE", lot_size=5000, base_price=105.0, volatility_annual=0.32),
+    "CANBK": AssetDefinition(symbol="CANBK", name="Canara Bank", asset_class=AssetClass.EQUITY_FUTURE, sector="PSU Banking", exchange="NSE", lot_size=3375, base_price=108.0, volatility_annual=0.29),
+    "IDFCFIRSTB": AssetDefinition(symbol="IDFCFIRSTB", name="IDFC FIRST Bank Ltd", asset_class=AssetClass.EQUITY_FUTURE, sector="Private Banking", exchange="NSE", lot_size=7500, base_price=74.0, volatility_annual=0.28),
+    "FEDERALBNK": AssetDefinition(symbol="FEDERALBNK", name="Federal Bank Ltd", asset_class=AssetClass.EQUITY_FUTURE, sector="Private Banking", exchange="NSE", lot_size=5000, base_price=195.0, volatility_annual=0.22),
+    "AUBANK": AssetDefinition(symbol="AUBANK", name="AU Small Finance Bank", asset_class=AssetClass.EQUITY_FUTURE, sector="Small Finance Bank", exchange="NSE", lot_size=1000, base_price=640.0, volatility_annual=0.27),
+
+    # --- Information Technology ---
+    "TECHM": AssetDefinition(symbol="TECHM", name="Tech Mahindra Ltd", asset_class=AssetClass.EQUITY_FUTURE, sector="Information Technology", exchange="NSE", lot_size=600, base_price=1680.0, volatility_annual=0.25),
+    "LTIM": AssetDefinition(symbol="LTIM", name="LTIMindtree Ltd", asset_class=AssetClass.EQUITY_FUTURE, sector="Information Technology", exchange="NSE", lot_size=150, base_price=5850.0, volatility_annual=0.26),
+    "PERSISTENT": AssetDefinition(symbol="PERSISTENT", name="Persistent Systems Ltd", asset_class=AssetClass.EQUITY_FUTURE, sector="Information Technology", exchange="NSE", lot_size=100, base_price=5400.0, volatility_annual=0.30),
+    "COFORGE": AssetDefinition(symbol="COFORGE", name="Coforge Limited", asset_class=AssetClass.EQUITY_FUTURE, sector="Information Technology", exchange="NSE", lot_size=150, base_price=7800.0, volatility_annual=0.32),
+    "MPHTASIS": AssetDefinition(symbol="MPHTASIS", name="Mphasis Limited", asset_class=AssetClass.EQUITY_FUTURE, sector="Information Technology", exchange="NSE", lot_size=275, base_price=2950.0, volatility_annual=0.28),
+    "LTTS": AssetDefinition(symbol="LTTS", name="L&T Technology Services", asset_class=AssetClass.EQUITY_FUTURE, sector="Engineering R&D Tech", exchange="NSE", lot_size=100, base_price=5100.0, volatility_annual=0.26),
+
+    # --- Automotive & Mobility ---
+    "BAJAJ-AUTO": AssetDefinition(symbol="BAJAJ-AUTO", name="Bajaj Auto Ltd", asset_class=AssetClass.EQUITY_FUTURE, sector="Automotive (2W/3W)", exchange="NSE", lot_size=75, base_price=9400.0, volatility_annual=0.22),
+    "HEROMOTOCO": AssetDefinition(symbol="HEROMOTOCO", name="Hero MotoCorp Ltd", asset_class=AssetClass.EQUITY_FUTURE, sector="Automotive (2W)", exchange="NSE", lot_size=150, base_price=4850.0, volatility_annual=0.23),
+    "TVSMOTOR": AssetDefinition(symbol="TVSMOTOR", name="TVS Motor Company Ltd", asset_class=AssetClass.EQUITY_FUTURE, sector="Automotive (2W)", exchange="NSE", lot_size=350, base_price=2420.0, volatility_annual=0.26),
+    "EICHERMOT": AssetDefinition(symbol="EICHERMOT", name="Eicher Motors (Royal Enfield)", asset_class=AssetClass.EQUITY_FUTURE, sector="Automotive", exchange="NSE", lot_size=175, base_price=4750.0, volatility_annual=0.22),
+    "BHARATFORG": AssetDefinition(symbol="BHARATFORG", name="Bharat Forge Ltd", asset_class=AssetClass.EQUITY_FUTURE, sector="Forging / Auto Comp", exchange="NSE", lot_size=500, base_price=1450.0, volatility_annual=0.27),
+
+    # --- Metals & Mining Expansion ---
+    "HINDALCO": AssetDefinition(symbol="HINDALCO", name="Hindalco Industries (Novelism)", asset_class=AssetClass.EQUITY_FUTURE, sector="Metals / Aluminium", exchange="NSE", lot_size=1400, base_price=675.0, volatility_annual=0.28),
+    "VEDL": AssetDefinition(symbol="VEDL", name="Vedanta Limited", asset_class=AssetClass.EQUITY_FUTURE, sector="Diversified Mining / Metals", exchange="NSE", lot_size=1150, base_price=460.0, volatility_annual=0.35),
+    "JINDALSTEL": AssetDefinition(symbol="JINDALSTEL", name="Jindal Steel & Power Ltd", asset_class=AssetClass.EQUITY_FUTURE, sector="Steel Manufacturing", exchange="NSE", lot_size=625, base_price=980.0, volatility_annual=0.30),
+    "NMDC": AssetDefinition(symbol="NMDC", name="NMDC Ltd (Iron Ore Mining)", asset_class=AssetClass.EQUITY_FUTURE, sector="Mining", exchange="NSE", lot_size=3375, base_price=225.0, volatility_annual=0.29),
+    "SAIL": AssetDefinition(symbol="SAIL", name="Steel Authority of India Ltd", asset_class=AssetClass.EQUITY_FUTURE, sector="Steel Manufacturing", exchange="NSE", lot_size=4750, base_price=135.0, volatility_annual=0.34),
+
+    # --- Pharmaceuticals & Hospitals ---
+    "CIPLA": AssetDefinition(symbol="CIPLA", name="Cipla Limited", asset_class=AssetClass.EQUITY_FUTURE, sector="Pharmaceuticals", exchange="NSE", lot_size=650, base_price=1520.0, volatility_annual=0.20),
+    "DIVISLAB": AssetDefinition(symbol="DIVISLAB", name="Divi's Laboratories Ltd", asset_class=AssetClass.EQUITY_FUTURE, sector="Active Pharma Ingredients", exchange="NSE", lot_size=200, base_price=5750.0, volatility_annual=0.24),
+    "APOLLOHOSP": AssetDefinition(symbol="APOLLOHOSP", name="Apollo Hospitals Enterprise", asset_class=AssetClass.EQUITY_FUTURE, sector="Hospitals / Healthcare", exchange="NSE", lot_size=125, base_price=6950.0, volatility_annual=0.22),
+    "LUPIN": AssetDefinition(symbol="LUPIN", name="Lupin Limited", asset_class=AssetClass.EQUITY_FUTURE, sector="Pharmaceuticals", exchange="NSE", lot_size=425, base_price=2150.0, volatility_annual=0.25),
+    "AUROPHARMA": AssetDefinition(symbol="AUROPHARMA", name="Aurobindo Pharma Ltd", asset_class=AssetClass.EQUITY_FUTURE, sector="Pharmaceuticals", exchange="NSE", lot_size=550, base_price=1380.0, volatility_annual=0.26),
+    "ZYDUSLIFE": AssetDefinition(symbol="ZYDUSLIFE", name="Zydus Lifesciences Ltd", asset_class=AssetClass.EQUITY_FUTURE, sector="Pharmaceuticals", exchange="NSE", lot_size=450, base_price=1040.0, volatility_annual=0.23),
+    "BIOCON": AssetDefinition(symbol="BIOCON", name="Biocon Limited", asset_class=AssetClass.EQUITY_FUTURE, sector="Biopharmaceuticals", exchange="NSE", lot_size=2500, base_price=340.0, volatility_annual=0.29),
+    "MAXHEALTH": AssetDefinition(symbol="MAXHEALTH", name="Max Healthcare Institute", asset_class=AssetClass.EQUITY_FUTURE, sector="Hospitals / Healthcare", exchange="NSE", lot_size=500, base_price=1020.0, volatility_annual=0.24),
+
+    # --- Capital Goods, Cables & Electricals ---
+    "SIEMENS": AssetDefinition(symbol="SIEMENS", name="Siemens Limited", asset_class=AssetClass.EQUITY_FUTURE, sector="Industrial Automation / Engineering", exchange="NSE", lot_size=75, base_price=7450.0, volatility_annual=0.27),
+    "ABB": AssetDefinition(symbol="ABB", name="ABB India Ltd", asset_class=AssetClass.EQUITY_FUTURE, sector="Heavy Electrical & Automation", exchange="NSE", lot_size=125, base_price=7850.0, volatility_annual=0.28),
+    "CUMMINSIND": AssetDefinition(symbol="CUMMINSIND", name="Cummins India Ltd", asset_class=AssetClass.EQUITY_FUTURE, sector="Engines / Generators", exchange="NSE", lot_size=200, base_price=3750.0, volatility_annual=0.26),
+    "CGPOWER": AssetDefinition(symbol="CGPOWER", name="CG Power and Industrial Solutions", asset_class=AssetClass.EQUITY_FUTURE, sector="Power Equipment / Transformers", exchange="NSE", lot_size=850, base_price=720.0, volatility_annual=0.32),
+    "POLYCAB": AssetDefinition(symbol="POLYCAB", name="Polycab India Ltd", asset_class=AssetClass.EQUITY_FUTURE, sector="Wires & Cables", exchange="NSE", lot_size=125, base_price=6750.0, volatility_annual=0.28),
+    "HAVELLS": AssetDefinition(symbol="HAVELLS", name="Havells India Ltd", asset_class=AssetClass.EQUITY_FUTURE, sector="Electrical Consumer Durables", exchange="NSE", lot_size=500, base_price=1820.0, volatility_annual=0.22),
+
+    # --- Chemicals & Fertilizers ---
+    "PIDILITIND": AssetDefinition(symbol="PIDILITIND", name="Pidilite Industries (Fevicol)", asset_class=AssetClass.EQUITY_FUTURE, sector="Adhesives / Specialty Chemicals", exchange="NSE", lot_size=250, base_price=3180.0, volatility_annual=0.18),
+    "SRF": AssetDefinition(symbol="SRF", name="SRF Limited", asset_class=AssetClass.EQUITY_FUTURE, sector="Chemicals & Polymers", exchange="NSE", lot_size=375, base_price=2350.0, volatility_annual=0.26),
+    "DEEPAKNTR": AssetDefinition(symbol="DEEPAKNTR", name="Deepak Nitrite Ltd", asset_class=AssetClass.EQUITY_FUTURE, sector="Organic Intermediates", exchange="NSE", lot_size=300, base_price=2750.0, volatility_annual=0.30),
+    "TATACHEM": AssetDefinition(symbol="TATACHEM", name="Tata Chemicals Ltd", asset_class=AssetClass.EQUITY_FUTURE, sector="Basic Chemistry / Soda Ash", exchange="NSE", lot_size=550, base_price=606.0, volatility_annual=0.30),
+    "PIIND": AssetDefinition(symbol="PIIND", name="PI Industries Ltd", asset_class=AssetClass.EQUITY_FUTURE, sector="Agro Chemicals", exchange="NSE", lot_size=150, base_price=4200.0, volatility_annual=0.24),
+    "UPL": AssetDefinition(symbol="UPL", name="UPL Limited", asset_class=AssetClass.EQUITY_FUTURE, sector="Crop Protection Chemicals", exchange="NSE", lot_size=1300, base_price=530.0, volatility_annual=0.32),
+
+    # --- Cement Expansion ---
+    "GRASIM": AssetDefinition(symbol="GRASIM", name="Grasim Industries Ltd", asset_class=AssetClass.EQUITY_FUTURE, sector="Cement & Viscose", exchange="NSE", lot_size=250, base_price=2680.0, volatility_annual=0.22),
+    "AMBUJACEM": AssetDefinition(symbol="AMBUJACEM", name="Ambuja Cements Ltd", asset_class=AssetClass.EQUITY_FUTURE, sector="Cement", exchange="NSE", lot_size=900, base_price=590.0, volatility_annual=0.26),
+    "ACC": AssetDefinition(symbol="ACC", name="ACC Limited", asset_class=AssetClass.EQUITY_FUTURE, sector="Cement", exchange="NSE", lot_size=300, base_price=2450.0, volatility_annual=0.24),
+    "SHREECEM": AssetDefinition(symbol="SHREECEM", name="Shree Cement Ltd", asset_class=AssetClass.EQUITY_FUTURE, sector="Cement", exchange="NSE", lot_size=25, base_price=26200.0, volatility_annual=0.20),
+
+    # --- Oil Marketing & Gas PSUs ---
+    "BPCL": AssetDefinition(symbol="BPCL", name="Bharat Petroleum Corp Ltd", asset_class=AssetClass.EQUITY_FUTURE, sector="Oil Refining & Marketing", exchange="NSE", lot_size=1800, base_price=320.0, volatility_annual=0.28),
+    "IOC": AssetDefinition(symbol="IOC", name="Indian Oil Corporation Ltd", asset_class=AssetClass.EQUITY_FUTURE, sector="Oil Refining & Marketing", exchange="NSE", lot_size=4875, base_price=145.0, volatility_annual=0.26),
+    "HPCL": AssetDefinition(symbol="HPCL", name="Hindustan Petroleum Corp", asset_class=AssetClass.EQUITY_FUTURE, sector="Oil Refining & Marketing", exchange="NSE", lot_size=2025, base_price=385.0, volatility_annual=0.30),
+    "GAIL": AssetDefinition(symbol="GAIL", name="GAIL (India) Limited", asset_class=AssetClass.EQUITY_FUTURE, sector="Natural Gas Transmission", exchange="NSE", lot_size=2650, base_price=205.0, volatility_annual=0.25),
+
     # ==========================================
     # 4. CURRENCIES & MACRO (6 Key Drivers)
     # ==========================================
@@ -748,12 +864,32 @@ def get_all_symbols() -> List[str]:
     return list(MARKET_UNIVERSE.keys())
 
 
-def get_asset_def(symbol: str) -> Optional[AssetDefinition]:
-    """Retrieves definition for a symbol with case-insensitive matching."""
+def get_asset_def(symbol: str) -> AssetDefinition:
+    """Retrieves definition for a symbol with case-insensitive matching or dynamic universal resolution."""
     if symbol in MARKET_UNIVERSE:
         return MARKET_UNIVERSE[symbol]
     upper = symbol.upper().strip()
     for k, v in MARKET_UNIVERSE.items():
         if k.upper() == upper or v.symbol.upper() == upper:
             return v
-    return None
+
+    # Universal Dynamic Asset Resolution for any Indian stock or instrument
+    is_index = any(x in upper for x in ["NIFTY", "SENSEX", "INDEX", "^"])
+    is_comm = any(x in upper for x in ["GOLD", "SILVER", "CRUDE", "GAS", "COPPER", "ZINC", "ALUM"])
+    is_curr = any(x in upper for x in ["INR", "USD", "EUR", "GBP", "JPY", "DXY"])
+    asset_cls = (
+        AssetClass.INDEX if is_index
+        else AssetClass.COMMODITY if is_comm
+        else AssetClass.CURRENCY_MACRO if is_curr
+        else AssetClass.EQUITY_FUTURE
+    )
+    return AssetDefinition(
+        symbol=upper,
+        name=f"{upper} Equity" if asset_cls == AssetClass.EQUITY_FUTURE else upper,
+        asset_class=asset_cls,
+        sector="Equities" if asset_cls == AssetClass.EQUITY_FUTURE else "General",
+        exchange="NSE" if asset_cls != AssetClass.COMMODITY else "MCX",
+        lot_size=1,
+        base_price=1000.0,
+        volatility_annual=0.28 if asset_cls == AssetClass.EQUITY_FUTURE else 0.18,
+    )
