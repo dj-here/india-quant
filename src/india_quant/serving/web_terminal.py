@@ -2,10 +2,10 @@
 Institutional Web Trading Terminal UI for IndiaQuant.
 Served directly via FastAPI on Vercel and local environments.
 Features:
-- TradingView Lightweight Charts for financial candlestick visualization
-- Dynamic overlay of Predicted High (Ĥ_t+1) and Predicted Low (L̂_t+1) bounds
-- Calibrated directional win probability indicator
-- Live Screener table
+- Full Indian Market Universe: 18 Indices, 32 F&O Equities, 9 MCX Commodities, 6 Currencies
+- TradingView Lightweight Charts with Dynamic Forecast Price Cone Overlay
+- Real-Time Market Breadth Sentiment Ribbon (Bull/Bear Ratio, Top Sectors, VIX)
+- Multi-Category Screener with Instant Search & 1-Click Asset Analysis
 - Paper trading order execution desk with Indian statutory tax breakdown
 - Risk controls and emergency kill-switch.
 """
@@ -15,21 +15,24 @@ HTML_TERMINAL = """<!DOCTYPE html>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>IndiaQuant Terminal | Institutional NSE/BSE Intelligence</title>
+  <title>IndiaQuant Terminal | Whole Indian Market Predictor (NSE/BSE/MCX)</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
   <style>
     :root {
-      --bg-dark: #0a0e17;
-      --card-bg: #121824;
+      --bg-dark: #080c14;
+      --card-bg: #0f1623;
       --card-border: #1e293b;
-      --text-main: #f1f5f9;
+      --card-border-subtle: rgba(255, 255, 255, 0.06);
+      --text-main: #f8fafc;
       --text-muted: #94a3b8;
       --accent-green: #10b981;
       --accent-red: #ef4444;
       --accent-blue: #3b82f6;
+      --accent-cyan: #06b6d4;
       --accent-amber: #f59e0b;
+      --accent-purple: #8b5cf6;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -43,10 +46,12 @@ HTML_TERMINAL = """<!DOCTYPE html>
     header {
       background: var(--card-bg);
       border-bottom: 1px solid var(--card-border);
-      padding: 14px 24px;
+      padding: 12px 24px;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
     }
     .brand {
       display: flex;
@@ -54,36 +59,101 @@ HTML_TERMINAL = """<!DOCTYPE html>
       gap: 12px;
     }
     .brand h1 {
-      font-size: 1.25rem;
-      font-weight: 700;
+      font-size: 1.3rem;
+      font-weight: 800;
       letter-spacing: -0.02em;
-      color: #fff;
+      background: linear-gradient(135deg, #fff 40%, var(--accent-cyan) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
     .badge {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 0.75rem;
+      font-size: 0.72rem;
       padding: 3px 8px;
       border-radius: 4px;
       font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
-    .badge-live { background: rgba(16, 185, 129, 0.15); color: var(--accent-green); border: 1px solid var(--accent-green); }
-    .badge-neon { background: rgba(59, 130, 246, 0.15); color: var(--accent-blue); border: 1px solid var(--accent-blue); }
-    .badge-alert { background: rgba(239, 68, 68, 0.15); color: var(--accent-red); border: 1px solid var(--accent-red); }
-    
+    .badge-live { background: rgba(16, 185, 129, 0.15); color: var(--accent-green); border: 1px solid rgba(16, 185, 129, 0.3); }
+    .badge-neon { background: rgba(59, 130, 246, 0.15); color: var(--accent-blue); border: 1px solid rgba(59, 130, 246, 0.3); }
+    .badge-mcx { background: rgba(245, 158, 11, 0.15); color: var(--accent-amber); border: 1px solid rgba(245, 158, 11, 0.3); }
+
     .status-bar {
       display: flex;
       align-items: center;
       gap: 16px;
-      font-size: 0.825rem;
+      font-size: 0.8rem;
       color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
     }
+
+    /* Market Breadth Ribbon */
+    .breadth-ribbon {
+      background: rgba(15, 22, 35, 0.95);
+      border-bottom: 1px solid var(--card-border);
+      padding: 8px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.78rem;
+      font-family: 'JetBrains Mono', monospace;
+      overflow-x: auto;
+      gap: 16px;
+    }
+    .breadth-item { display: flex; align-items: center; gap: 6px; }
+    .breadth-bar {
+      width: 140px;
+      height: 6px;
+      background: #1e293b;
+      border-radius: 3px;
+      overflow: hidden;
+      display: flex;
+    }
+    .breadth-bull { background: var(--accent-green); height: 100%; }
+    .breadth-bear { background: var(--accent-red); height: 100%; }
+
+    /* Category Nav Tabs */
+    .category-nav {
+      display: flex;
+      gap: 8px;
+      padding: 12px 24px 0 24px;
+      overflow-x: auto;
+    }
+    .cat-btn {
+      background: rgba(30, 41, 59, 0.4);
+      border: 1px solid var(--card-border);
+      color: var(--text-muted);
+      padding: 7px 14px;
+      border-radius: 6px 6px 0 0;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+    .cat-btn:hover { color: #fff; background: rgba(59, 130, 246, 0.1); }
+    .cat-btn.active {
+      color: #fff;
+      background: var(--card-bg);
+      border-bottom-color: var(--card-bg);
+      border-top: 2px solid var(--accent-cyan);
+    }
+
     .main-grid {
       display: grid;
-      grid-template-columns: 2.8fr 1.2fr;
+      grid-template-columns: 2.7fr 1.3fr;
       gap: 16px;
-      padding: 16px 24px;
+      padding: 12px 24px 24px 24px;
       flex: 1;
     }
+    @media (max-width: 1200px) {
+      .main-grid { grid-template-columns: 1fr; }
+    }
+
     .card {
       background: var(--card-bg);
       border: 1px solid var(--card-border);
@@ -93,8 +163,8 @@ HTML_TERMINAL = """<!DOCTYPE html>
       flex-direction: column;
     }
     .card-title {
-      font-size: 0.9rem;
-      font-weight: 600;
+      font-size: 0.85rem;
+      font-weight: 700;
       color: var(--text-muted);
       text-transform: uppercase;
       letter-spacing: 0.05em;
@@ -102,218 +172,306 @@ HTML_TERMINAL = """<!DOCTYPE html>
       display: flex;
       justify-content: space-between;
       align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
     }
+
+    /* KPI Row */
     .kpi-row {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 12px;
-      margin-bottom: 16px;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    @media (max-width: 768px) {
+      .kpi-row { grid-template-columns: repeat(2, 1fr); }
     }
     .kpi-card {
-      background: rgba(15, 23, 42, 0.6);
+      background: rgba(10, 14, 23, 0.6);
       border: 1px solid var(--card-border);
       border-radius: 6px;
-      padding: 12px;
+      padding: 10px 12px;
     }
-    .kpi-label { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px; }
-    .kpi-val { font-family: 'JetBrains Mono', monospace; font-size: 1.25rem; font-weight: 700; }
-    .kpi-delta { font-size: 0.75rem; margin-top: 2px; }
+    .kpi-label { font-size: 0.72rem; color: var(--text-muted); margin-bottom: 4px; }
+    .kpi-val { font-family: 'JetBrains Mono', monospace; font-size: 1.2rem; font-weight: 700; }
+    .kpi-sub { font-size: 0.72rem; margin-top: 2px; font-family: 'JetBrains Mono', monospace; }
+    
     .text-green { color: var(--accent-green); }
     .text-red { color: var(--accent-red); }
     .text-blue { color: var(--accent-blue); }
+    .text-cyan { color: var(--accent-cyan); }
     .text-amber { color: var(--accent-amber); }
+    .text-purple { color: var(--accent-purple); }
 
+    /* Chart Container */
     #chart-container {
       width: 100%;
       height: 380px;
       position: relative;
+      background: #080c14;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.04);
     }
 
-    /* Screener & Desk Tabs */
+    /* Controls Bar */
+    .controls-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .search-box {
+      background: #090e17;
+      border: 1px solid var(--card-border);
+      color: #fff;
+      padding: 6px 10px;
+      border-radius: 5px;
+      font-size: 0.8rem;
+      font-family: 'JetBrains Mono', monospace;
+      width: 180px;
+    }
+    .search-box:focus { outline: none; border-color: var(--accent-cyan); }
+    .select-asset {
+      background: #090e17;
+      border: 1px solid var(--card-border);
+      color: #fff;
+      padding: 6px 10px;
+      border-radius: 5px;
+      font-size: 0.8rem;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .btn-action {
+      background: var(--accent-cyan);
+      color: #000;
+      font-weight: 700;
+      font-size: 0.78rem;
+      padding: 6px 12px;
+      border-radius: 5px;
+      cursor: pointer;
+      border: none;
+      transition: all 0.15s ease;
+    }
+    .btn-action:hover { filter: brightness(1.15); transform: translateY(-1px); }
+
+    /* Screener Table */
     .table-container {
       overflow-x: auto;
+      max-height: 480px;
       margin-top: 8px;
     }
     table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       font-family: 'JetBrains Mono', monospace;
     }
     th {
+      position: sticky;
+      top: 0;
+      background: #111a29;
       text-align: left;
-      padding: 10px;
+      padding: 8px 10px;
       color: var(--text-muted);
       border-bottom: 1px solid var(--card-border);
-      font-weight: 500;
+      font-weight: 600;
+      font-size: 0.75rem;
+      letter-spacing: 0.03em;
     }
     td {
-      padding: 10px;
-      border-bottom: 1px solid rgba(30, 41, 59, 0.5);
+      padding: 8px 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      white-space: nowrap;
     }
+    tr:hover { background: rgba(59, 130, 246, 0.05); }
 
-    /* Order Ticket Form */
-    .form-group {
-      margin-bottom: 12px;
+    .signal-badge {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      font-weight: 700;
     }
-    label {
-      display: block;
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      margin-bottom: 6px;
-      font-weight: 500;
-    }
-    select, input {
+    .sig-strong-buy { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid #10b981; }
+    .sig-buy { background: rgba(16, 185, 129, 0.1); color: var(--accent-green); }
+    .sig-neutral { background: rgba(148, 163, 184, 0.1); color: var(--text-muted); }
+    .sig-sell { background: rgba(239, 68, 68, 0.1); color: var(--accent-red); }
+    .sig-strong-sell { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid #ef4444; }
+
+    /* Order Desk */
+    .form-group { margin-bottom: 10px; }
+    label { display: block; font-size: 0.72rem; color: var(--text-muted); margin-bottom: 4px; font-weight: 600; }
+    .form-control {
       width: 100%;
-      background: #0f172a;
+      background: #090e17;
       border: 1px solid var(--card-border);
       color: #fff;
-      padding: 8px 12px;
-      border-radius: 6px;
-      font-size: 0.85rem;
+      padding: 8px 10px;
+      border-radius: 5px;
+      font-size: 0.82rem;
       font-family: 'JetBrains Mono', monospace;
     }
-    select:focus, input:focus {
-      outline: none;
-      border-color: var(--accent-blue);
-    }
-    .btn-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      margin-top: 14px;
-    }
-    button {
-      padding: 10px;
-      border-radius: 6px;
-      font-weight: 600;
-      font-size: 0.85rem;
+    .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+    button.desk-btn {
+      padding: 9px;
+      border-radius: 5px;
+      font-weight: 700;
+      font-size: 0.82rem;
       cursor: pointer;
       border: none;
       transition: all 0.15s ease;
     }
-    .btn-buy { background: var(--accent-green); color: #fff; }
-    .btn-buy:hover { background: #059669; }
+    .btn-buy { background: var(--accent-green); color: #000; }
+    .btn-buy:hover { filter: brightness(1.15); }
     .btn-sell { background: var(--accent-red); color: #fff; }
-    .btn-sell:hover { background: #dc2626; }
+    .btn-sell:hover { filter: brightness(1.15); }
     .btn-kill {
       width: 100%;
-      background: #7f1d1d;
-      color: #fecaca;
-      border: 1px solid #b91c1c;
-      margin-top: 12px;
+      background: #450a0a;
+      color: #fca5a5;
+      border: 1px solid #991b1b;
+      margin-top: 10px;
     }
-    .btn-kill:hover { background: #991b1b; }
+    .btn-kill:hover { background: #7f1d1d; }
 
     footer {
       background: var(--card-bg);
       border-top: 1px solid var(--card-border);
-      padding: 12px 24px;
-      font-size: 0.75rem;
+      padding: 10px 24px;
+      font-size: 0.72rem;
       color: var(--text-muted);
       line-height: 1.4;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
     }
   </style>
 </head>
 <body>
 
+  <!-- Top Header -->
   <header>
     <div class="brand">
-      <h1>🏛️ IndiaQuant Terminal</h1>
-      <span class="badge badge-live">PROD v2.0.0</span>
-      <span class="badge badge-neon" id="neon-badge">NEON POSTGRES: READY</span>
-      <span class="badge" id="circuit-badge" style="background:#0f172a; color:#94a3b8;">NORMAL EXECUTION</span>
+      <h1>🏛️ IndiaQuant Market Predictor</h1>
+      <span class="badge badge-live">NSE / BSE / MCX</span>
+      <span class="badge badge-neon" id="neon-badge">NEON POSTGRES: SYNCED</span>
+      <span class="badge badge-mcx">65+ ASSETS ONLINE</span>
     </div>
     <div class="status-bar">
-      <span>NSE Market: <strong id="nse-status" class="text-green">ONLINE (IST)</strong></span>
+      <span>India Market: <strong id="market-status" class="text-green">TRADING ACTIVE (IST)</strong></span>
       <span id="clock-ist">--:--:-- IST</span>
     </div>
   </header>
 
+  <!-- Live Market Breadth Ribbon -->
+  <div class="breadth-ribbon">
+    <div class="breadth-item">
+      <span>Market Breadth:</span>
+      <div class="breadth-bar">
+        <div class="breadth-bull" id="breadth-bull-bar" style="width: 58%;"></div>
+        <div class="breadth-bear" id="breadth-bear-bar" style="width: 42%;"></div>
+      </div>
+      <strong id="breadth-ratio" class="text-green">58% BULLISH</strong>
+    </div>
+    <div class="breadth-item">
+      <span>Sentiment: <strong id="overall-sentiment" class="text-cyan">MODERATELY BULLISH</strong></span>
+    </div>
+    <div class="breadth-item">
+      <span>Leading Sector: <strong id="top-sector" class="text-green">Technology</strong></span>
+    </div>
+    <div class="breadth-item">
+      <span>India VIX: <strong id="vix-val" class="text-amber">13.80 (-2.1%)</strong></span>
+    </div>
+    <button class="btn-action" onclick="runMarketScan()">⚡ SCAN ALL 65 ASSETS</button>
+  </div>
+
+  <!-- Asset Category Filter Tabs -->
+  <div class="category-nav">
+    <button class="cat-btn active" onclick="switchCategory('all', this)">🌐 All Market (65)</button>
+    <button class="cat-btn" onclick="switchCategory('indices', this)">📊 Indices (18)</button>
+    <button class="cat-btn" onclick="switchCategory('equities', this)">⚡ F&O Equities (32)</button>
+    <button class="cat-btn" onclick="switchCategory('commodities', this)">🪙 MCX Commodities (9)</button>
+    <button class="cat-btn" onclick="switchCategory('currencies', this)">💱 Currencies & Macro (6)</button>
+  </div>
+
   <main class="main-grid">
-    <!-- Left Column: Forecast & Price Bounds + Chart + Screener -->
-    <div style="display: flex; flex-direction: column; gap: 16px;">
+    <!-- Left Column: Forecast & Active Chart & Full Screener -->
+    <div style="display: flex; flex-direction: column; gap: 14px;">
       
-      <!-- Top Forecast KPI Bar -->
+      <!-- Top Forecast KPI Bar for Selected Asset -->
       <div class="card">
         <div class="card-title">
-          <span>Active Asset: <select id="symbol-select" style="width: auto; display: inline-block; padding: 4px 8px; margin-left: 8px;"><option>NIFTY 50</option><option>NIFTY BANK</option></select></span>
-          <span id="model-tag" style="font-size: 0.75rem; color: var(--accent-blue);">RegimeAware_Ensemble (90% Conformal)</span>
+          <div class="controls-bar">
+            <span>Asset:</span>
+            <select id="symbol-select" class="select-asset" onchange="selectAsset(this.value)">
+              <!-- Populated dynamically via /api/v1/market/universe -->
+              <option value="NIFTY 50">NIFTY 50 (Benchmark)</option>
+              <option value="NIFTY BANK">NIFTY BANK (Banking)</option>
+              <option value="GOLD">GOLD (MCX Bullion)</option>
+              <option value="CRUDE OIL">CRUDE OIL (MCX Energy)</option>
+              <option value="RELIANCE">RELIANCE (NSE Heavyweight)</option>
+              <option value="USDINR">USDINR (Forex)</option>
+            </select>
+            <input type="text" id="asset-search" class="search-box" placeholder="Search 65+ assets..." oninput="filterAssets(this.value)">
+          </div>
+          <span id="model-tag" class="text-cyan" style="font-size: 0.75rem; font-family: 'JetBrains Mono', monospace;">
+            Conformal 90% Monotonic Projection
+          </span>
         </div>
 
         <div class="kpi-row">
           <div class="kpi-card">
-            <div class="kpi-label">Current Spot Close</div>
-            <div class="kpi-val" id="spot-price">₹24,500.00</div>
-            <div class="kpi-delta text-green" id="spot-delta">+0.35% (1D)</div>
+            <div class="kpi-label">Spot Price</div>
+            <div class="kpi-val" id="spot-price">₹25,350.00</div>
+            <div class="kpi-sub text-green" id="spot-delta">+0.45% (1D)</div>
           </div>
           <div class="kpi-card">
-            <div class="kpi-label">Calibrated P(Win / Up)</div>
-            <div class="kpi-val text-green" id="prob-win">53.76%</div>
-            <div class="kpi-delta text-green" id="direction-tag">🟢 BULLISH EDGE</div>
+            <div class="kpi-label">Win Probability P(Up)</div>
+            <div class="kpi-val text-green" id="win-prob">56.2%</div>
+            <div class="kpi-sub" id="sig-label"><span class="signal-badge sig-buy">BUY</span></div>
           </div>
           <div class="kpi-card">
-            <div class="kpi-label">Predicted High (Ĥ_t+1)</div>
-            <div class="kpi-val text-green" id="pred-high">₹24,696.00</div>
-            <div class="kpi-delta text-green" id="pred-high-delta">+0.80% Target</div>
+            <div class="kpi-label">Next-Day Target High</div>
+            <div class="kpi-val text-cyan" id="pred-high">₹25,489.00</div>
+            <div class="kpi-sub" id="conf-high-label">Upper 90%: ₹25,744.00</div>
           </div>
           <div class="kpi-card">
-            <div class="kpi-label">Predicted Low (L̂_t+1)</div>
-            <div class="kpi-val text-red" id="pred-low">₹24,304.00</div>
-            <div class="kpi-delta text-red" id="pred-low-delta">-0.80% Floor</div>
+            <div class="kpi-label">Next-Day Target Low</div>
+            <div class="kpi-val text-red" id="pred-low">₹25,239.00</div>
+            <div class="kpi-sub" id="conf-low-label">Lower 90%: ₹24,987.00</div>
           </div>
         </div>
 
-        <!-- Interactive Candlestick Chart -->
+        <!-- TradingView Lightweight Candlestick Chart -->
         <div id="chart-container"></div>
-        <div style="display: flex; gap: 16px; margin-top: 8px; font-size: 0.75rem; color: var(--text-muted);">
-          <span><span style="color:#10b981;">---</span> Predicted Next-Day High (Ĥ)</span>
-          <span><span style="color:#ef4444;">---</span> Predicted Next-Day Low (L̂)</span>
-          <span><span style="color:#3b82f6;">···</span> 90% Conformal Bounds</span>
-        </div>
       </div>
 
-      <!-- Screener Card -->
+      <!-- Whole Market Screener & Conviction Ranking -->
       <div class="card">
         <div class="card-title">
-          <span>Institutional Market Screener (Ranked Alpha)</span>
-          <span style="font-size: 0.75rem;">NSE Top Universe</span>
+          <span>Whole Market Screener (<span id="screener-count">65</span> Assets Scanned)</span>
+          <span style="font-size: 0.72rem; color: var(--text-muted);">Ranked by Conviction Edge</span>
         </div>
         <div class="table-container">
-          <table>
+          <table id="screener-table">
             <thead>
               <tr>
                 <th>Symbol</th>
+                <th>Asset Class</th>
+                <th>Sector</th>
                 <th>Spot Price</th>
-                <th>P(Win)</th>
-                <th>Direction</th>
-                <th>Next-Day High</th>
-                <th>Next-Day Low</th>
-                <th>R:R Ratio</th>
-                <th>Verdict</th>
+                <th>1D Change</th>
+                <th>P(Up) Prob</th>
+                <th>Signal</th>
+                <th>Target High (Ĥ)</th>
+                <th>Target Low (L̂)</th>
+                <th>R:R</th>
+                <th>Regime</th>
+                <th>Action</th>
               </tr>
             </thead>
-            <tbody id="screener-tbody">
-              <tr>
-                <td><strong>NIFTY 50</strong></td>
-                <td>₹24,500.00</td>
-                <td class="text-green">53.76%</td>
-                <td class="text-green">🟢 BULLISH</td>
-                <td>₹24,696.00</td>
-                <td>₹24,304.00</td>
-                <td>1.65x</td>
-                <td><span class="badge badge-live">EXECUTE</span></td>
-              </tr>
-              <tr>
-                <td><strong>NIFTY BANK</strong></td>
-                <td>₹52,000.00</td>
-                <td class="text-green">53.12%</td>
-                <td class="text-green">🟢 BULLISH</td>
-                <td>₹52,480.00</td>
-                <td>₹51,550.00</td>
-                <td>1.48x</td>
-                <td><span class="badge badge-live">EXECUTE</span></td>
-              </tr>
+            <tbody id="screener-body">
+              <tr><td colspan="12" style="text-align: center; color: var(--text-muted); padding: 20px;">Loading live market universe predictions...</td></tr>
             </tbody>
           </table>
         </div>
@@ -321,236 +479,394 @@ HTML_TERMINAL = """<!DOCTYPE html>
 
     </div>
 
-    <!-- Right Column: Paper Order Ticket + Portfolio + Friction Breakdown -->
-    <div style="display: flex; flex-direction: column; gap: 16px;">
+    <!-- Right Column: Institutional Order Desk & Portfolio Status -->
+    <div style="display: flex; flex-direction: column; gap: 14px;">
       
-      <!-- Portfolio MTM Status -->
+      <!-- Paper Execution Desk -->
       <div class="card">
-        <div class="card-title">Portfolio Status (MTM)</div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
-          <div>
-            <div style="font-size: 0.7rem; color: var(--text-muted);">Total Equity</div>
-            <div style="font-family: 'JetBrains Mono', monospace; font-size: 1.15rem; font-weight: 700;" id="port-equity">₹10,00,000.00</div>
-          </div>
-          <div>
-            <div style="font-size: 0.7rem; color: var(--text-muted);">Liquid Cash</div>
-            <div style="font-family: 'JetBrains Mono', monospace; font-size: 1.15rem; font-weight: 700; color: var(--accent-green);" id="port-cash">₹10,00,000.00</div>
-          </div>
+        <div class="card-title">
+          <span>⚡ Paper Execution Desk</span>
+          <span class="badge badge-live">NSE / MCX T+1</span>
         </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-          <div>
-            <div style="font-size: 0.7rem; color: var(--text-muted);">Unsettled Cash (T+1)</div>
-            <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.95rem;" id="port-t1">₹0.00</div>
-          </div>
-          <div>
-            <div style="font-size: 0.7rem; color: var(--text-muted);">Drawdown / Limit</div>
-            <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.95rem;" id="port-dd">0.00% / -15%</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Paper Trading Execution Ticket -->
-      <div class="card">
-        <div class="card-title">Paper Order Execution</div>
         <div class="form-group">
-          <label>Order Instrument</label>
-          <select id="ticket-symbol">
-            <option value="NIFTY 50">NIFTY 50 (Index Futures)</option>
-            <option value="NIFTY BANK">NIFTY BANK (Index Futures)</option>
+          <label>Selected Symbol</label>
+          <input type="text" id="order-symbol" class="form-control" value="NIFTY 50" readonly>
+        </div>
+        <div class="form-group">
+          <label>Order Type</label>
+          <select id="order-type" class="form-control">
+            <option>MARKET</option>
+            <option>LIMIT</option>
           </select>
         </div>
         <div class="form-group">
-          <label>Order Quantity (Lot Size)</label>
-          <input type="number" id="ticket-qty" value="25" step="25" min="25">
+          <label>Quantity (Shares / Units)</label>
+          <input type="number" id="order-qty" class="form-control" value="25" min="1">
         </div>
         <div class="form-group">
-          <label>Execution Price (INR)</label>
-          <input type="number" id="ticket-price" value="24500" step="10">
-        </div>
-
-        <!-- Statutory Friction Breakdown -->
-        <div style="background: #0f172a; border: 1px solid var(--card-border); border-radius: 6px; padding: 10px; margin-top: 10px; font-size: 0.75rem;">
-          <div style="font-weight: 600; color: var(--text-muted); margin-bottom: 6px;">Statutory Indian Taxes & Friction:</div>
-          <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
-            <span>Estimated Turnover:</span><strong id="cost-turnover">₹6,12,500</strong>
-          </div>
-          <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
-            <span>Brokerage:</span><strong>₹20.00</strong>
-          </div>
-          <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
-            <span>STT (0.02% Sell side):</span><strong id="cost-stt">₹122.50</strong>
-          </div>
-          <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
-            <span>GST (18% on Fees):</span><strong>₹8.10</strong>
-          </div>
-          <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
-            <span>SEBI & Stamp Duty:</span><strong>₹15.20</strong>
-          </div>
-          <div style="display: flex; justify-content: space-between; margin-top: 4px; border-top: 1px solid var(--card-border); padding-top: 4px;">
-            <span>Total Estimated Friction:</span><strong class="text-amber" id="cost-total">₹165.80 (2.7 bps)</strong>
-          </div>
+          <label>Execution Price (Est.)</label>
+          <input type="number" id="order-price" class="form-control" value="25350.00">
         </div>
 
         <div class="btn-row">
-          <button class="btn-buy" onclick="submitOrder('BUY')">BUY / LONG</button>
-          <button class="btn-sell" onclick="submitOrder('SELL')">SELL / SHORT</button>
+          <button class="desk-btn btn-buy" onclick="placeOrder('BUY')">BUY / LONG</button>
+          <button class="desk-btn btn-sell" onclick="placeOrder('SELL')">SELL / SHORT</button>
         </div>
 
-        <button class="btn-kill" onclick="triggerKillSwitch()">🛑 EMERGENCY KILL SWITCH</button>
+        <button class="desk-btn btn-kill" onclick="triggerKillSwitch()">🚨 EMERGENCY KILL-SWITCH (SQUARE OFF)</button>
+        <div id="order-alert" style="margin-top: 10px; font-size: 0.75rem; font-family: 'JetBrains Mono', monospace;"></div>
       </div>
 
-      <!-- Quick System Info -->
-      <div class="card" style="font-size: 0.75rem; color: var(--text-muted); line-height: 1.6;">
-        <div class="card-title">Production Gating & Cloud State</div>
-        <div>• Database: <strong>Neon Serverless Postgres</strong></div>
-        <div>• Model Stage: <strong>Production (Walk-Forward Purged)</strong></div>
-        <div>• Conformal Coverage: <strong>92.93% (Holdout Empirical)</strong></div>
-        <div>• Brier Calibration Score: <strong>0.2478 (Beats 0.2500)</strong></div>
-        <div style="margin-top: 6px;"><a href="/docs" style="color: var(--accent-blue); text-decoration: none;">Explore OpenAPI Swagger Docs &rarr;</a></div>
+      <!-- Portfolio Status & Risk Controls -->
+      <div class="card">
+        <div class="card-title">
+          <span>💼 Simulated Portfolio</span>
+          <span class="badge" id="risk-badge" style="background:#090e17; color:#10b981;">RISK NORMAL</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem;">
+          <div style="display: flex; justify-content: space-between;">
+            <span style="color: var(--text-muted);">Total Equity:</span>
+            <strong id="port-equity">₹10,00,000.00</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span style="color: var(--text-muted);">Liquid Cash:</span>
+            <strong id="port-cash" class="text-green">₹10,00,000.00</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span style="color: var(--text-muted);">Unsettled Cash (T+1):</span>
+            <strong id="port-unsettled">₹0.00</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span style="color: var(--text-muted);">Max Drawdown:</span>
+            <strong id="port-dd" class="text-cyan">0.00% (Limit: 15%)</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- Statutory Indian Market Charges Breakdown -->
+      <div class="card">
+        <div class="card-title">
+          <span>🏛️ Indian Statutory Friction</span>
+          <span style="font-size: 0.7rem; color: var(--text-muted);">SEBI / Exchange Rates</span>
+        </div>
+        <div style="font-size: 0.72rem; color: var(--text-muted); line-height: 1.5; font-family: 'JetBrains Mono', monospace;">
+          <div>• STT / CTT: 0.0125% - 0.1% on Turnover</div>
+          <div>• Exchange Charges: 0.00345% (NSE) / 0.0026% (MCX)</div>
+          <div>• SEBI Turnover Fee: ₹10 / Crore</div>
+          <div>• GST: 18% on Brokerage & Exchange Fees</div>
+          <div>• Stamp Duty: 0.003% (Futures) / 0.015% (Delivery)</div>
+          <div>• Settlement: Strict T+1 Clearing Standard</div>
+        </div>
       </div>
 
     </div>
   </main>
 
+  <!-- Footer Disclaimers -->
   <footer>
-    <p><strong>SEBI Regulatory Compliance & Governance:</strong> IndiaQuant operates strictly as an institutional quantitative research modeling platform. Predictions, directional probabilities, and price bounds are algorithmic estimates and do not constitute financial advice or investment recommendations under SEBI (Research Analysts) Regulations, 2014. All execution modules operate in simulated paper-trading mode.</p>
+    <div>
+      <strong>SEBI REGULATORY NOTICE:</strong> Algorithmic market prediction software for quantitative research only. Not financial advice. Past performance does not guarantee future market returns.
+    </div>
+    <div>
+      Powered by <strong>IndiaQuant Engine v2.0</strong> | Neon Serverless PostgreSQL | TradingView Lightweight Charts
+    </div>
   </footer>
 
   <script>
-    // Live Clock
+    let activeSymbol = "NIFTY 50";
+    let activeCategory = "all";
+    let chart, candleSeries, highLine, lowLine, closeLine;
+    let allPredictions = [];
+
+    // Initialize Lightweight Chart
+    function initChart() {
+      const container = document.getElementById("chart-container");
+      chart = LightweightCharts.createChart(container, {
+        layout: {
+          background: { color: "#080c14" },
+          textColor: "#94a3b8",
+          fontFamily: "'JetBrains Mono', monospace",
+        },
+        grid: {
+          vertLines: { color: "rgba(255, 255, 255, 0.04)" },
+          horzLines: { color: "rgba(255, 255, 255, 0.04)" },
+        },
+        timeScale: {
+          borderColor: "#1e293b",
+          timeVisible: true,
+        },
+        rightPriceScale: {
+          borderColor: "#1e293b",
+        },
+      });
+
+      candleSeries = chart.addCandlestickSeries({
+        upColor: "#10b981",
+        downColor: "#ef4444",
+        borderVisible: false,
+        wickUpColor: "#10b981",
+        wickDownColor: "#ef4444",
+      });
+
+      highLine = chart.addLineSeries({ color: "#06b6d4", lineWidth: 2, lineStyle: 2, title: "Target High Ĥ" });
+      lowLine = chart.addLineSeries({ color: "#ef4444", lineWidth: 2, lineStyle: 2, title: "Target Low L̂" });
+      closeLine = chart.addLineSeries({ color: "#3b82f6", lineWidth: 1, lineStyle: 3, title: "Pred Close Ĉ" });
+
+      window.addEventListener("resize", () => {
+        chart.resize(container.clientWidth, container.clientHeight);
+      });
+    }
+
+    // Populate Symbol Select Dropdown with all 65 Assets
+    async function loadUniverse() {
+      try {
+        const res = await fetch("/api/v1/market/scan?category=all");
+        const data = await res.json();
+        allPredictions = data.predictions || [];
+
+        const sel = document.getElementById("symbol-select");
+        sel.innerHTML = "";
+
+        // Group by Asset Class
+        const groups = { "INDEX": "Indices (18)", "EQUITY_FUTURE": "F&O Equities (32)", "COMMODITY": "MCX Commodities (9)", "CURRENCY_MACRO": "Currencies & Macro (6)" };
+        const grouped = {};
+        allPredictions.forEach(p => {
+          if (!grouped[p.asset_class]) grouped[p.asset_class] = [];
+          grouped[p.asset_class].push(p);
+        });
+
+        for (const [cls, list] of Object.entries(grouped)) {
+          const optGroup = document.createElement("optgroup");
+          optGroup.label = groups[cls] || cls;
+          list.forEach(p => {
+            const opt = document.createElement("option");
+            opt.value = p.symbol;
+            opt.textContent = `${p.symbol} - ${p.name}`;
+            optGroup.appendChild(opt);
+          });
+          sel.appendChild(optGroup);
+        }
+
+        renderScreenerTable(allPredictions);
+        loadBreadth();
+        loadChartData(activeSymbol);
+      } catch (err) {
+        console.error("Failed to load market universe:", err);
+      }
+    }
+
+    // Load Candlestick & Forecast Data
+    async function loadChartData(symbol) {
+      try {
+        const res = await fetch(`/api/v1/chart/${encodeURIComponent(symbol)}`);
+        const data = await res.json();
+
+        if (data.candles && data.candles.length > 0) {
+          candleSeries.setData(data.candles);
+
+          // Update KPIs
+          const f = data.forecast;
+          const lastCandle = data.candles[data.candles.length - 1];
+          document.getElementById("spot-price").textContent = "₹" + f.current_price.toLocaleString("en-IN", { minimumFractionDigits: 2 });
+          document.getElementById("win-prob").textContent = (f.prob_win * 100).toFixed(1) + "%";
+          document.getElementById("pred-high").textContent = "₹" + f.predicted_high.toLocaleString("en-IN", { minimumFractionDigits: 2 });
+          document.getElementById("pred-low").textContent = "₹" + f.predicted_low.toLocaleString("en-IN", { minimumFractionDigits: 2 });
+          document.getElementById("conf-high-label").textContent = "Upper 90%: ₹" + f.conformal_high.toLocaleString("en-IN", { minimumFractionDigits: 2 });
+          document.getElementById("conf-low-label").textContent = "Lower 90%: ₹" + f.conformal_low.toLocaleString("en-IN", { minimumFractionDigits: 2 });
+
+          // Signal badge
+          const sigEl = document.getElementById("sig-label");
+          let sigClass = "sig-neutral";
+          if (f.signal === "STRONG BUY") sigClass = "sig-strong-buy";
+          else if (f.signal === "BUY") sigClass = "sig-buy";
+          else if (f.signal === "SELL") sigClass = "sig-sell";
+          else if (f.signal === "STRONG SELL") sigClass = "sig-strong-sell";
+          sigEl.innerHTML = `<span class="signal-badge ${sigClass}">${f.signal}</span>`;
+
+          // Order Desk update
+          document.getElementById("order-symbol").value = symbol;
+          document.getElementById("order-price").value = f.current_price.toFixed(2);
+
+          // Forecast Cone overlays
+          const lastTime = lastCandle.time;
+          highLine.setData([
+            { time: lastTime, value: f.current_price },
+            { time: lastTime, value: f.predicted_high }
+          ]);
+          lowLine.setData([
+            { time: lastTime, value: f.current_price },
+            { time: lastTime, value: f.predicted_low }
+          ]);
+          closeLine.setData([
+            { time: lastTime, value: f.current_price },
+            { time: lastTime, value: f.predicted_close }
+          ]);
+
+          chart.timeScale().fitContent();
+        }
+      } catch (e) {
+        console.error("Chart load error:", e);
+      }
+    }
+
+    // Select Asset
+    function selectAsset(sym) {
+      activeSymbol = sym;
+      document.getElementById("symbol-select").value = sym;
+      loadChartData(sym);
+    }
+
+    // Switch Category Tabs
+    function switchCategory(cat, btn) {
+      activeCategory = cat;
+      document.querySelectorAll(".cat-btn").forEach(b => b.classList.remove("active"));
+      if (btn) btn.classList.add("active");
+
+      runMarketScan(cat);
+    }
+
+    // Run Live Market Scan
+    async function runMarketScan(cat = activeCategory) {
+      try {
+        const res = await fetch(`/api/v1/market/scan?category=${cat}`);
+        const data = await res.json();
+        allPredictions = data.predictions || [];
+        renderScreenerTable(allPredictions);
+        loadBreadth();
+      } catch (e) {
+        console.error("Scan error:", e);
+      }
+    }
+
+    // Render Screener Table
+    function renderScreenerTable(list) {
+      const tbody = document.getElementById("screener-body");
+      document.getElementById("screener-count").textContent = list.length;
+      tbody.innerHTML = "";
+
+      list.forEach(p => {
+        const tr = document.createElement("tr");
+
+        let sigClass = "sig-neutral";
+        if (p.signal === "STRONG BUY") sigClass = "sig-strong-buy";
+        else if (p.signal === "BUY") sigClass = "sig-buy";
+        else if (p.signal === "SELL") sigClass = "sig-sell";
+        else if (p.signal === "STRONG SELL") sigClass = "sig-strong-sell";
+
+        const deltaClass = p.change_1d_pct >= 0 ? "text-green" : "text-red";
+        const deltaSign = p.change_1d_pct >= 0 ? "+" : "";
+
+        tr.innerHTML = `
+          <td><strong>${p.symbol}</strong></td>
+          <td><span class="badge" style="background:#1e293b; color:#94a3b8;">${p.asset_class}</span></td>
+          <td style="color: var(--text-muted);">${p.sector}</td>
+          <td><strong>₹${p.current_price.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</strong></td>
+          <td class="${deltaClass}">${deltaSign}${p.change_1d_pct}%</td>
+          <td><strong class="${p.prob_win >= 0.5 ? 'text-green' : 'text-red'}">${(p.prob_win * 100).toFixed(1)}%</strong></td>
+          <td><span class="signal-badge ${sigClass}">${p.signal}</span></td>
+          <td class="text-cyan">₹${p.predicted_high.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
+          <td class="text-red">₹${p.predicted_low.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
+          <td><strong>${p.risk_reward_ratio}:1</strong></td>
+          <td style="font-size: 0.72rem; color: var(--text-muted);">${p.regime_label}</td>
+          <td><button class="btn-action" style="padding: 3px 8px; font-size: 0.7rem;" onclick="selectAsset('${p.symbol}')">ANALYZE</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Filter Assets on search input
+    function filterAssets(q) {
+      const filtered = allPredictions.filter(p =>
+        p.symbol.toLowerCase().includes(q.toLowerCase()) ||
+        p.name.toLowerCase().includes(q.toLowerCase()) ||
+        p.sector.toLowerCase().includes(q.toLowerCase())
+      );
+      renderScreenerTable(filtered);
+    }
+
+    // Load Market Breadth
+    async function loadBreadth() {
+      try {
+        const res = await fetch("/api/v1/market/breadth");
+        const b = await res.json();
+
+        document.getElementById("breadth-bull-bar").style.width = b.bullish_pct + "%";
+        document.getElementById("breadth-bear-bar").style.width = b.bearish_pct + "%";
+        document.getElementById("breadth-ratio").textContent = `${b.bullish_pct}% BULLISH (${b.bullish_count}/${b.total_scanned})`;
+        document.getElementById("overall-sentiment").textContent = b.overall_sentiment;
+        document.getElementById("top-sector").textContent = b.top_bullish_sector;
+        document.getElementById("vix-val").textContent = b.vix_level.toFixed(2);
+      } catch (e) {
+        console.error("Breadth error:", e);
+      }
+    }
+
+    // Place Paper Trading Order
+    async function placeOrder(side) {
+      const sym = document.getElementById("order-symbol").value;
+      const qty = parseInt(document.getElementById("order-qty").value) || 25;
+      const type = document.getElementById("order-type").value;
+      const price = parseFloat(document.getElementById("order-price").value) || null;
+
+      const alertEl = document.getElementById("order-alert");
+      alertEl.innerHTML = `<span style="color: var(--accent-blue);">Executing ${side} order on NSE/MCX...</span>`;
+
+      try {
+        const res = await fetch("/api/v1/paper-trading/order", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ symbol: sym, side, quantity: qty, order_type: type, price })
+        });
+        const d = await res.json();
+        alertEl.innerHTML = `<span style="color: var(--accent-green);">✔ Executed #${d.order_id.slice(0,8)} @ ₹${d.executed_price.toFixed(2)} | Total Friction: ₹${d.friction.total_friction.toFixed(2)}</span>`;
+        loadPortfolio();
+      } catch (e) {
+        alertEl.innerHTML = `<span style="color: var(--accent-red);">✖ Execution Failed: ${e}</span>`;
+      }
+    }
+
+    // Load Portfolio
+    async function loadPortfolio() {
+      try {
+        const res = await fetch("/api/v1/paper-trading/portfolio");
+        const p = await res.json();
+        document.getElementById("port-equity").textContent = "₹" + p.total_equity.toLocaleString("en-IN", { minimumFractionDigits: 2 });
+        document.getElementById("port-cash").textContent = "₹" + p.liquid_cash.toLocaleString("en-IN", { minimumFractionDigits: 2 });
+        document.getElementById("port-unsettled").textContent = "₹" + p.unsettled_cash_t1.toLocaleString("en-IN", { minimumFractionDigits: 2 });
+        document.getElementById("port-dd").textContent = (p.drawdown_pct * 100).toFixed(2) + "% (Limit: 15%)";
+      } catch (e) {
+        console.error("Portfolio load error:", e);
+      }
+    }
+
+    // Emergency Kill Switch
+    async function triggerKillSwitch() {
+      if (!confirm("EMERGENCY KILL-SWITCH: Square off all open positions immediately?")) return;
+      try {
+        const res = await fetch("/api/v1/risk/kill-switch", { method: "POST" });
+        const d = await res.json();
+        alert(`Kill-switch triggered! Closed ${d.positions_closed} positions. Freed cash: ₹${d.freed_cash_inr.toFixed(2)}`);
+        loadPortfolio();
+      } catch (e) {
+        alert("Kill-switch error: " + e);
+      }
+    }
+
+    // Clock IST
     function updateClock() {
       const now = new Date();
-      document.getElementById('clock-ist').innerText = now.toLocaleTimeString('en-US', { timeZone: 'Asia/Kolkata' }) + ' IST';
+      const istOptions = { timeZone: "Asia/Kolkata", hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" };
+      document.getElementById("clock-ist").textContent = now.toLocaleTimeString("en-GB", istOptions) + " IST";
     }
     setInterval(updateClock, 1000);
     updateClock();
 
-    // Initialize TradingView Lightweight Charts
-    const chartContainer = document.getElementById('chart-container');
-    const chart = LightweightCharts.createChart(chartContainer, {
-      layout: { background: { color: '#121824' }, textColor: '#94a3b8' },
-      grid: { vertLines: { color: '#1e293b' }, horzLines: { color: '#1e293b' } },
-      timeScale: { borderColor: '#1e293b', timeVisible: true },
-      rightPriceScale: { borderColor: '#1e293b' },
+    // Init
+    window.addEventListener("DOMContentLoaded", () => {
+      initChart();
+      loadUniverse();
+      loadPortfolio();
     });
-
-    const candleSeries = chart.addCandlestickSeries({
-      upColor: '#10b981', downColor: '#ef4444',
-      borderVisible: false,
-      wickUpColor: '#10b981', wickDownColor: '#ef4444'
-    });
-
-    // Seed historical bars
-    let basePrice = 24350;
-    const initialData = [];
-    const now = Math.floor(Date.now() / 1000) - 40 * 86400;
-    for (let i = 0; i < 40; i++) {
-      const t = now + i * 86400;
-      const change = (Math.random() - 0.48) * 120;
-      const open = basePrice;
-      const close = basePrice + change;
-      const high = Math.max(open, close) + Math.random() * 60;
-      const low = Math.min(open, close) - Math.random() * 60;
-      initialData.push({ time: t, open, high, low, close });
-      basePrice = close;
-    }
-    candleSeries.setData(initialData);
-
-    // Dynamic Price Bound lines
-    const lastClose = initialData[initialData.length - 1].close;
-    document.getElementById('spot-price').innerText = '₹' + lastClose.toLocaleString('en-IN', {minimumFractionDigits: 2});
-    const predHigh = Math.round(lastClose * 1.008);
-    const predLow = Math.round(lastClose * 0.992);
-    document.getElementById('pred-high').innerText = '₹' + predHigh.toLocaleString('en-IN');
-    document.getElementById('pred-low').innerText = '₹' + predLow.toLocaleString('en-IN');
-    document.getElementById('ticket-price').value = Math.round(lastClose);
-
-    candleSeries.createPriceLine({
-      price: predHigh,
-      color: '#10b981',
-      lineWidth: 2,
-      lineStyle: LightweightCharts.LineStyle.Dashed,
-      axisLabelVisible: true,
-      title: 'Ĥ_t+1 (Pred High)',
-    });
-
-    candleSeries.createPriceLine({
-      price: predLow,
-      color: '#ef4444',
-      lineWidth: 2,
-      lineStyle: LightweightCharts.LineStyle.Dashed,
-      axisLabelVisible: true,
-      title: 'L̂_t+1 (Pred Low)',
-    });
-
-    candleSeries.createPriceLine({
-      price: Math.round(lastClose * 1.015),
-      color: '#3b82f6',
-      lineWidth: 1,
-      lineStyle: LightweightCharts.LineStyle.Dotted,
-      axisLabelVisible: true,
-      title: '90% Upper',
-    });
-
-    candleSeries.createPriceLine({
-      price: Math.round(lastClose * 0.985),
-      color: '#3b82f6',
-      lineWidth: 1,
-      lineStyle: LightweightCharts.LineStyle.Dotted,
-      axisLabelVisible: true,
-      title: '90% Lower',
-    });
-
-    chart.timeScale().fitContent();
-
-    // Order Execution
-    async function submitOrder(side) {
-      const symbol = document.getElementById('ticket-symbol').value;
-      const qty = parseInt(document.getElementById('ticket-qty').value, 10);
-      const price = parseFloat(document.getElementById('ticket-price').value);
-
-      try {
-        const res = await fetch('/api/v1/paper-trading/order', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ symbol, side, quantity: qty, price, order_type: 'LIMIT' })
-        });
-        const data = await res.json();
-        if (res.ok) {
-          alert('Order ' + data.order_id + ' EXECUTED! Executed Price: ₹' + data.executed_price + ' | Friction: ₹' + data.friction.total_friction);
-          refreshPortfolio();
-        } else {
-          alert('Execution Error: ' + (data.detail || 'Failed'));
-        }
-      } catch (err) {
-        alert('Network error placing order: ' + err);
-      }
-    }
-
-    async function refreshPortfolio() {
-      try {
-        const res = await fetch('/api/v1/paper-trading/portfolio');
-        const data = await res.json();
-        if (res.ok) {
-          document.getElementById('port-equity').innerText = '₹' + data.total_equity.toLocaleString('en-IN', {minimumFractionDigits: 2});
-          document.getElementById('port-cash').innerText = '₹' + data.liquid_cash.toLocaleString('en-IN', {minimumFractionDigits: 2});
-          document.getElementById('port-t1').innerText = '₹' + data.unsettled_cash_t1.toLocaleString('en-IN', {minimumFractionDigits: 2});
-          document.getElementById('port-dd').innerText = (data.drawdown_pct * 100).toFixed(2) + '% / -15%';
-          if (data.is_halted) {
-            document.getElementById('circuit-badge').innerText = 'HALTED (CIRCUIT TRIP)';
-            document.getElementById('circuit-badge').style.color = '#ef4444';
-          }
-        }
-      } catch (e) {}
-    }
-
-    async function triggerKillSwitch() {
-      if (!confirm('Are you sure you want to trigger EMERGENCY KILL SWITCH? All open positions will be closed immediately.')) return;
-      const res = await fetch('/api/v1/risk/kill-switch', { method: 'POST' });
-      const data = await res.json();
-      alert('KILL SWITCH ACTIVATED! Closed ' + data.positions_closed + ' positions.');
-      refreshPortfolio();
-    }
   </script>
 </body>
 </html>

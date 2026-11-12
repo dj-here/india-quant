@@ -1,9 +1,9 @@
 {
   "symbol": "NIFTY BANK",
   "asset_class": "indices",
-  "total_bars": 3166,
-  "first_timestamp": "2014-01-01T15:30:00+05:30",
-  "last_timestamp": "2026-11-11T15:30:00+05:30",
-  "file_size_bytes": 133119,
-  "last_updated_ist": "2026-11-11T10:22:35.126849+05:30"
+  "total_bars": 600,
+  "first_timestamp": "2024-06-19T15:30:00+05:30",
+  "last_timestamp": "2026-11-12T15:30:00+05:30",
+  "file_size_bytes": 38068,
+  "last_updated_ist": "2026-11-12T11:21:57.679999+05:30"
 }

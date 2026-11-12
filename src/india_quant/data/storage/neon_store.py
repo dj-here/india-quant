@@ -169,6 +169,15 @@ class NeonDataStore:
         if not self.is_configured:
             return False
 
+        clean_record = {}
+        for k, v in record.items():
+            if hasattr(v, "item"):  # numpy scalar
+                clean_record[k] = v.item()
+            elif isinstance(v, (float, int, bool, str)) or v is None:
+                clean_record[k] = v
+            else:
+                clean_record[k] = float(v) if isinstance(v, (np.floating, float)) else str(v)
+
         query = """
         INSERT INTO model_predictions (
             timestamp_ist, symbol, model_name, model_version, current_price,
@@ -183,7 +192,7 @@ class NeonDataStore:
         try:
             with self.get_connection() as conn:
                 with conn.cursor() as cur:
-                    cur.execute(query, record)
+                    cur.execute(query, clean_record)
                 conn.commit()
             return True
         except Exception as e:

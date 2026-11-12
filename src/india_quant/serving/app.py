@@ -20,8 +20,14 @@ import pytz
 
 from india_quant.backtest.costs_india import InstrumentType
 from india_quant.common.logging import get_logger
+from india_quant.common.universe import MARKET_UNIVERSE, get_asset_def
 from india_quant.features.store import FeatureStore
 from india_quant.models.ensemble import RegimeAwareEnsemble
+from india_quant.models.market_predictor import (
+    ComprehensiveMarketPredictor,
+    MarketAssetPrediction,
+    MarketBreadthSummary,
+)
 from india_quant.models.registry import ModelRegistry
 from india_quant.models.tree_models import LightGBMQuantileForecaster
 from india_quant.data.storage.neon_store import NeonDataStore
@@ -70,6 +76,7 @@ registry = ModelRegistry()
 paper_broker = PaperTradingBroker(initial_capital=1_000_000.0)
 audit_logger = AuditLogger()
 neon_store = NeonDataStore()
+market_predictor = ComprehensiveMarketPredictor()
 
 
 @app.on_event("startup")
@@ -120,138 +127,131 @@ def _resolve_prediction_for_symbol(
     custom_features: Optional[Dict[str, float]] = None,
 ) -> PredictionResponse:
     """Internal helper to compute calibrated predictions and price bounds."""
-    # 1. Attempt to load production model for symbol, fallback to NIFTY 50 if needed
+    # 1. Attempt to load production model for symbol if specifically trained and no custom features
     bundle = registry.load_production_model(symbol)
-    if bundle is None:
-        bundle = registry.load_production_model("NIFTY 50")
-        if bundle is None:
-            # Fallback to any registered model
-            models = registry.list_models()
-            if not models:
-                raise HTTPException(
-                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                    detail="No models registered in registry. Train a model first.",
-                )
-            bundle = registry.load_production_model(models[-1].symbol)
+    if bundle is not None and not custom_features:
+        try:
+            model_obj = bundle["model"]
+            feature_names = bundle["feature_names"]
+            model_name = bundle.get("model_name", "RegimeAware_Ensemble")
+            model_version = bundle.get("version", "2.0.0")
 
-    model_obj = bundle["model"]
-    feature_names = bundle["feature_names"]
-    model_name = bundle.get("model_name", "RegimeAware_Ensemble")
-    model_version = bundle.get("version", "2.0.0")
+            df_feat = feature_store.load_features(symbol)
+            if not df_feat.empty:
+                latest_row = df_feat.iloc[[-1]].copy()
+                current_price = float(latest_row["close"].iloc[0]) if "close" in latest_row.columns else 24500.0
 
-    # 2. Retrieve latest feature vector
-    try:
-        df_feat = feature_store.load_features(symbol)
-    except Exception:
-        # Fallback to NIFTY 50 features if symbol features are absent
-        df_feat = feature_store.load_features("NIFTY 50")
+                for c in feature_names:
+                    if c not in latest_row.columns:
+                        latest_row[c] = 0.0
 
-    if df_feat.empty:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"No feature records found for symbol {symbol}",
-        )
+                X_in = latest_row[feature_names].fillna(0.0)
+                cur_prices_series = pd.Series([current_price], index=X_in.index)
 
-    latest_row = df_feat.iloc[[-1]].copy()
-    current_price = float(latest_row["close"].iloc[0]) if "close" in latest_row.columns else 24500.0
+                if isinstance(model_obj, (RegimeAwareEnsemble, LightGBMQuantileForecaster)):
+                    pred = model_obj.predict(X_in, current_prices=cur_prices_series)
+                    prob_win = float(pred["prob_up"][0])
+                    direction = int(pred["pred_dir"][0])
+                    abstain = bool(pred["abstain"][0])
+                    predicted_high = float(pred["pred_high_price_50"][0]) if "pred_high_price_50" in pred else round(current_price * np.exp(pred["pred_high_ratio_50"][0]), 2)
+                    predicted_low = float(pred["pred_low_price_50"][0]) if "pred_low_price_50" in pred else round(current_price * np.exp(pred["pred_low_ratio_50"][0]), 2)
+                    predicted_close = round(current_price * (1.0 + float(pred["pred_return_50"][0])), 2)
+                    conf_high = float(pred["conf_high_price"][0]) if "conf_high_price" in pred else round(predicted_high * 1.01, 2)
+                    conf_low = float(pred["conf_low_price"][0]) if "conf_low_price" in pred else round(predicted_low * 0.99, 2)
+                    q_low = float(pred.get("conf_ret_low", [-0.01])[0])
+                    q_high = float(pred.get("conf_ret_high", [0.01])[0])
+                    now_ist = datetime.now(tz=IST).isoformat()
 
-    if custom_features:
-        for k, v in custom_features.items():
-            if k in latest_row.columns:
-                latest_row[k] = v
+                    try:
+                        audit_logger.log_prediction(
+                            symbol=symbol,
+                            model_name=model_name,
+                            model_version=model_version,
+                            features=X_in.iloc[0].to_dict(),
+                            prob_win=round(prob_win, 4),
+                            direction=direction,
+                            predicted_high=round(predicted_high, 2),
+                            predicted_low=round(predicted_low, 2),
+                            abstain=abstain,
+                        )
+                    except Exception as log_ex:
+                        logger.warning(f"Audit log failed: {log_ex}")
 
-    # Align feature columns
-    missing_cols = [c for c in feature_names if c not in latest_row.columns]
-    for c in missing_cols:
-        latest_row[c] = 0.0
+                    return PredictionResponse(
+                        symbol=symbol,
+                        current_price=round(current_price, 2),
+                        prob_win=round(prob_win, 4),
+                        direction=direction,
+                        abstain=abstain,
+                        abstain_reason="Model disagreement or probability near 50% threshold" if abstain else None,
+                        predicted_high=round(predicted_high, 2),
+                        predicted_low=round(predicted_low, 2),
+                        predicted_close=round(predicted_close, 2),
+                        conformal_high_bound=round(conf_high, 2),
+                        conformal_low_bound=round(conf_low, 2),
+                        conformal_return_interval=(round(q_low, 4), round(q_high, 4)),
+                        model_name=model_name,
+                        model_version=model_version,
+                        timestamp_ist=now_ist,
+                    )
+        except Exception as e:
+            logger.warning(f"Bundle inference failed for {symbol}: {e}, falling back to market predictor")
 
-    X_in = latest_row[feature_names].fillna(0.0)
+    # 2. Comprehensive Multi-Asset Market Predictor Engine across all 65+ assets
+    p = market_predictor.predict_asset(symbol)
+    now_ist = p.timestamp_ist
 
-    now_ist = datetime.now(tz=IST).isoformat()
-
-    # 3. Predict via Model Architecture
-    cur_prices_series = pd.Series([current_price], index=X_in.index)
-
-    if isinstance(model_obj, (RegimeAwareEnsemble, LightGBMQuantileForecaster)):
-        pred = model_obj.predict(X_in, current_prices=cur_prices_series)
-        prob_win = float(pred["prob_up"][0])
-        direction = int(pred["pred_dir"][0])
-        abstain = bool(pred["abstain"][0])
-        abstain_reason = "Model disagreement or probability near 50% threshold" if abstain else None
-        predicted_high = float(pred["pred_high_price_50"][0]) if "pred_high_price_50" in pred else round(current_price * np.exp(pred["pred_high_ratio_50"][0]), 2)
-        predicted_low = float(pred["pred_low_price_50"][0]) if "pred_low_price_50" in pred else round(current_price * np.exp(pred["pred_low_ratio_50"][0]), 2)
-        predicted_close = round(current_price * (1.0 + float(pred["pred_return_50"][0])), 2)
-        conf_high = float(pred["conf_high_price"][0]) if "conf_high_price" in pred else round(predicted_high * 1.01, 2)
-        conf_low = float(pred["conf_low_price"][0]) if "conf_low_price" in pred else round(predicted_low * 0.99, 2)
-        q_low = float(pred.get("conf_ret_low", [-0.01])[0])
-        q_high = float(pred.get("conf_ret_high", [0.01])[0])
-    else:
-        # Generic fallback
-        prob_win = 0.52
-        direction = 1
-        abstain = False
-        abstain_reason = None
-        predicted_high = current_price * 1.008
-        predicted_low = current_price * 0.992
-        predicted_close = current_price * 1.002
-        conf_high = current_price * 1.015
-        conf_low = current_price * 0.985
-        q_low = -0.015
-        q_high = 0.015
-
-    # Cryptographic audit logging for SEBI / governance compliance
-    try:
-        audit_logger.log_prediction(
-            symbol=symbol,
-            model_name=model_name,
-            model_version=model_version,
-            features=X_in.iloc[0].to_dict(),
-            prob_win=round(prob_win, 4),
-            direction=direction,
-            predicted_high=round(predicted_high, 2),
-            predicted_low=round(predicted_low, 2),
-            abstain=abstain,
-        )
-    except Exception as log_ex:
-        logger.warning(f"Audit log failed: {log_ex}")
-
-    # Persist live prediction to Neon Cloud Postgres if configured
     if neon_store.is_configured:
         try:
             neon_store.save_prediction({
                 "timestamp_ist": now_ist,
-                "symbol": symbol,
-                "model_name": model_name,
-                "model_version": model_version,
-                "current_price": round(current_price, 2),
-                "prob_win": round(prob_win, 4),
-                "direction": direction,
-                "predicted_high": round(predicted_high, 2),
-                "predicted_low": round(predicted_low, 2),
-                "predicted_close": round(predicted_close, 2),
-                "conformal_high": round(conf_high, 2),
-                "conformal_low": round(conf_low, 2),
-                "abstain": abstain,
-                "signature_sha256": audit_logger.compute_sha256({"sym": symbol, "p": prob_win, "t": now_ist}),
+                "symbol": p.symbol,
+                "model_name": "ComprehensiveMarketPredictor",
+                "model_version": "2.0.0",
+                "current_price": p.current_price,
+                "prob_win": p.prob_win,
+                "direction": p.direction,
+                "predicted_high": p.predicted_high,
+                "predicted_low": p.predicted_low,
+                "predicted_close": p.predicted_close,
+                "conformal_high": p.conformal_high_bound,
+                "conformal_low": p.conformal_low_bound,
+                "abstain": p.abstain,
+                "signature_sha256": audit_logger.compute_sha256({"sym": symbol, "p": p.prob_win, "t": now_ist}),
             })
         except Exception as n_ex:
             logger.warning(f"Neon prediction persist error: {n_ex}")
 
+    try:
+        audit_logger.log_prediction(
+            symbol=p.symbol,
+            model_name="ComprehensiveMarketPredictor",
+            model_version="2.0.0",
+            features={"current_price": p.current_price, "regime": p.regime_state},
+            prob_win=p.prob_win,
+            direction=p.direction,
+            predicted_high=p.predicted_high,
+            predicted_low=p.predicted_low,
+            abstain=p.abstain,
+        )
+    except Exception as log_ex:
+        logger.warning(f"Audit log failed: {log_ex}")
+
     return PredictionResponse(
-        symbol=symbol,
-        current_price=round(current_price, 2),
-        prob_win=round(prob_win, 4),
-        direction=direction,
-        abstain=abstain,
-        abstain_reason=abstain_reason,
-        predicted_high=round(predicted_high, 2),
-        predicted_low=round(predicted_low, 2),
-        predicted_close=round(predicted_close, 2),
-        conformal_high_bound=round(conf_high, 2),
-        conformal_low_bound=round(conf_low, 2),
-        conformal_return_interval=(round(q_low, 4), round(q_high, 4)),
-        model_name=model_name,
-        model_version=model_version,
+        symbol=p.symbol,
+        current_price=p.current_price,
+        prob_win=p.prob_win,
+        direction=p.direction,
+        abstain=p.abstain,
+        abstain_reason="Model neutral/balanced probability" if p.abstain else None,
+        predicted_high=p.predicted_high,
+        predicted_low=p.predicted_low,
+        predicted_close=p.predicted_close,
+        conformal_high_bound=p.conformal_high_bound,
+        conformal_low_bound=p.conformal_low_bound,
+        conformal_return_interval=p.conformal_return_interval,
+        model_name="ComprehensiveMarketPredictor",
+        model_version="2.0.0",
         timestamp_ist=now_ist,
     )
 
@@ -269,39 +269,121 @@ def predict_direction_and_range(request: PredictionRequest):
     )
 
 
+@app.get("/api/v1/market/universe", tags=["Market Universe"])
+def get_market_universe():
+    """Returns canonical catalog of all 65+ tracked Indian market assets across Indices, F&O Equities, Commodities, and Currencies."""
+    return [
+        {
+            "symbol": a.symbol,
+            "name": a.name,
+            "asset_class": a.asset_class.value,
+            "sector": a.sector,
+            "exchange": a.exchange,
+            "lot_size": a.lot_size,
+            "base_price": a.base_price,
+        }
+        for a in MARKET_UNIVERSE.values()
+    ]
+
+
+@app.get("/api/v1/market/scan", tags=["Market Universe"])
+def scan_market(category: Optional[str] = Query(default="all")):
+    """Scans and predicts the entire Indian market universe or a filtered asset category."""
+    predictions = market_predictor.scan_market(category=category)
+    return {
+        "timestamp_ist": datetime.now(tz=IST).isoformat(),
+        "count": len(predictions),
+        "category": category,
+        "predictions": [asdict(p) for p in predictions],
+    }
+
+
+@app.get("/api/v1/market/breadth", tags=["Market Universe"])
+def get_market_breadth():
+    """Returns real-time whole-market sentiment breadth, bull/bear percentage, and sectoral leadership."""
+    breadth = market_predictor.get_market_breadth()
+    return asdict(breadth)
+
+
+@app.get("/api/v1/chart/{symbol:path}", tags=["Market Universe"])
+def get_chart_data(symbol: str, bars_count: int = Query(default=120, ge=20, le=500)):
+    """Returns historical OHLCV candles and next-day price forecast bounds for TradingView Lightweight Charts."""
+    # 1. Fetch OHLCV bars from lakehouse store
+    try:
+        df = market_predictor.parquet_store.read_ohlcv(symbol)
+    except Exception:
+        df = pd.DataFrame()
+
+    if df is None or df.empty:
+        # Fallback synthetic generation if dataset not yet cached
+        asset_def = get_asset_def(symbol)
+        base = asset_def.base_price if asset_def else 1000.0
+        vol = (asset_def.volatility_annual if asset_def else 0.20) / np.sqrt(252)
+        dates = pd.date_range(end=datetime.now(), periods=bars_count, freq="B")
+        np.random.seed(abs(hash(symbol)) % (2**31))
+        returns = np.random.normal(0.0003, vol, size=bars_count)
+        prices = base * np.exp(np.cumsum(returns))
+        highs = prices * (1.0 + np.abs(np.random.normal(0, vol * 0.5, size=bars_count)))
+        lows = prices * (1.0 - np.abs(np.random.normal(0, vol * 0.5, size=bars_count)))
+        opens = np.roll(prices, 1)
+        opens[0] = base
+        candles = [
+            {
+                "time": d.strftime("%Y-%m-%d"),
+                "open": round(float(o), 2),
+                "high": round(float(h), 2),
+                "low": round(float(l), 2),
+                "close": round(float(c), 2),
+            }
+            for d, o, h, l, c in zip(dates, opens, highs, lows, prices)
+        ]
+    else:
+        df_tail = df.tail(bars_count)
+        candles = []
+        for _, row in df_tail.iterrows():
+            d_val = row["date"]
+            t_str = d_val.strftime("%Y-%m-%d") if isinstance(d_val, (pd.Timestamp, datetime)) else str(d_val)[:10]
+            candles.append({
+                "time": t_str,
+                "open": round(float(row["open"]), 2),
+                "high": round(float(row["high"]), 2),
+                "low": round(float(row["low"]), 2),
+                "close": round(float(row["close"]), 2),
+            })
+
+    # 2. Compute forecast and bounds
+    pred = market_predictor.predict_asset(symbol)
+    f_dict = asdict(pred)
+    f_dict["conformal_high"] = pred.conformal_high_bound
+    f_dict["conformal_low"] = pred.conformal_low_bound
+
+    return {
+        "symbol": symbol,
+        "candles": candles,
+        "forecast": f_dict,
+    }
+
+
 @app.get("/api/v1/screener", response_model=ScreenerResponse, tags=["Screener"])
 def run_market_screener():
     """
     Scans tracked index and equity universe, generating calibrated signals
     and ranking by directional probability edge and risk-reward ratio.
     """
-    universe = ["NIFTY 50", "NIFTY BANK"]
-    items: List[ScreenerItem] = []
-
-    for sym in universe:
-        try:
-            pred = _resolve_prediction_for_symbol(symbol=sym)
-            upside = max(0.1, pred.predicted_high - pred.current_price)
-            downside = max(0.1, pred.current_price - pred.predicted_low)
-            rr_ratio = upside / downside
-
-            items.append(
-                ScreenerItem(
-                    symbol=sym,
-                    current_price=pred.current_price,
-                    prob_win=pred.prob_win,
-                    direction=pred.direction,
-                    abstain=pred.abstain,
-                    predicted_high=pred.predicted_high,
-                    predicted_low=pred.predicted_low,
-                    risk_reward_ratio=round(rr_ratio, 2),
-                )
-            )
-        except Exception as e:
-            logger.warning(f"Screener evaluation failed for {sym}: {e}")
-
-    # Rank by probability edge |p - 0.5| descending
-    items.sort(key=lambda x: abs(x.prob_win - 0.5), reverse=True)
+    preds = market_predictor.scan_market("all")
+    items: List[ScreenerItem] = [
+        ScreenerItem(
+            symbol=p.symbol,
+            current_price=p.current_price,
+            prob_win=p.prob_win,
+            direction=p.direction,
+            abstain=p.abstain,
+            predicted_high=p.predicted_high,
+            predicted_low=p.predicted_low,
+            risk_reward_ratio=p.risk_reward_ratio,
+        )
+        for p in preds
+    ]
 
     return ScreenerResponse(
         total_symbols=len(items),

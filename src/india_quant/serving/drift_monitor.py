@@ -115,7 +115,11 @@ class DriftMonitor:
         Comprehensive data and feature drift audit comparing baseline training window
         to the current operational inference window.
         """
-        cols = feature_columns or [c for c in baseline_df.columns if c in current_df.columns and c != "timestamp"]
+        numeric_cols = [
+            c for c in baseline_df.select_dtypes(include=[np.number]).columns
+            if c in current_df.columns and c not in ["timestamp", "date", "symbol"]
+        ]
+        cols = feature_columns or numeric_cols
         now_ist = datetime.now(tz=IST).isoformat()
 
         psi_scores: Dict[str, float] = {}
