@@ -18,7 +18,7 @@ HTML_TERMINAL = """<!DOCTYPE html>
   <title>IndiaQuant Terminal | Whole Indian Market Predictor (NSE/BSE/MCX)</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+  <script src="https://unpkg.com/lightweight-charts@4.2.1/dist/lightweight-charts.standalone.production.js"></script>
   <style>
     :root {
       --bg-dark: #080c14;
@@ -382,14 +382,14 @@ HTML_TERMINAL = """<!DOCTYPE html>
     <div class="breadth-item">
       <span>India VIX: <strong id="vix-val" class="text-amber">13.80 (-2.1%)</strong></span>
     </div>
-    <button class="btn-action" onclick="runMarketScan()">⚡ SCAN ENTIRE MARKET</button>
+    <button id="scan-btn" class="btn-action" onclick="runMarketScan()">⚡ SCAN ENTIRE MARKET</button>
   </div>
 
   <!-- Asset Category Filter Tabs -->
   <div class="category-nav">
-    <button class="cat-btn active" onclick="switchCategory('all', this)">🌐 All Market (130+)</button>
+    <button class="cat-btn active" onclick="switchCategory('all', this)">🌐 All Market (151)</button>
     <button class="cat-btn" onclick="switchCategory('indices', this)">📊 Indices (18)</button>
-    <button class="cat-btn" onclick="switchCategory('equities', this)">⚡ Indian Stocks (100+)</button>
+    <button class="cat-btn" onclick="switchCategory('equities', this)">⚡ Indian Stocks (118)</button>
     <button class="cat-btn" onclick="switchCategory('commodities', this)">🪙 MCX Commodities (9)</button>
     <button class="cat-btn" onclick="switchCategory('currencies', this)">💱 Currencies & Macro (6)</button>
   </div>
@@ -585,43 +585,59 @@ HTML_TERMINAL = """<!DOCTYPE html>
     // Initialize Lightweight Chart
     function initChart() {
       const container = document.getElementById("chart-container");
-      chart = LightweightCharts.createChart(container, {
-        layout: {
-          background: { color: "#080c14" },
-          textColor: "#94a3b8",
-          fontFamily: "'JetBrains Mono', monospace",
-        },
-        grid: {
-          vertLines: { color: "rgba(255, 255, 255, 0.04)" },
-          horzLines: { color: "rgba(255, 255, 255, 0.04)" },
-        },
-        timeScale: {
-          borderColor: "#1e293b",
-          timeVisible: true,
-        },
-        rightPriceScale: {
-          borderColor: "#1e293b",
-        },
-      });
+      if (!window.LightweightCharts) {
+        console.warn("LightweightCharts library not loaded");
+        return;
+      }
+      try {
+        chart = LightweightCharts.createChart(container, {
+          layout: {
+            background: { color: "#080c14" },
+            textColor: "#94a3b8",
+            fontFamily: "'JetBrains Mono', monospace",
+          },
+          grid: {
+            vertLines: { color: "rgba(255, 255, 255, 0.04)" },
+            horzLines: { color: "rgba(255, 255, 255, 0.04)" },
+          },
+          timeScale: {
+            borderColor: "#1e293b",
+            timeVisible: true,
+          },
+          rightPriceScale: {
+            borderColor: "#1e293b",
+          },
+        });
 
-      candleSeries = chart.addCandlestickSeries({
-        upColor: "#10b981",
-        downColor: "#ef4444",
-        borderVisible: false,
-        wickUpColor: "#10b981",
-        wickDownColor: "#ef4444",
-      });
+        const candleOpts = {
+          upColor: "#10b981",
+          downColor: "#ef4444",
+          borderVisible: false,
+          wickUpColor: "#10b981",
+          wickDownColor: "#ef4444",
+        };
 
-      highLine = chart.addLineSeries({ color: "#06b6d4", lineWidth: 2, lineStyle: 2, title: "Target High Ĥ" });
-      lowLine = chart.addLineSeries({ color: "#ef4444", lineWidth: 2, lineStyle: 2, title: "Target Low L̂" });
-      closeLine = chart.addLineSeries({ color: "#3b82f6", lineWidth: 1, lineStyle: 3, title: "Pred Close Ĉ" });
+        if (typeof chart.addCandlestickSeries === "function") {
+          candleSeries = chart.addCandlestickSeries(candleOpts);
+          highLine = chart.addLineSeries({ color: "#06b6d4", lineWidth: 2, lineStyle: 2, title: "Target High Ĥ" });
+          lowLine = chart.addLineSeries({ color: "#ef4444", lineWidth: 2, lineStyle: 2, title: "Target Low L̂" });
+          closeLine = chart.addLineSeries({ color: "#3b82f6", lineWidth: 1, lineStyle: 3, title: "Pred Close Ĉ" });
+        } else if (typeof chart.addSeries === "function" && window.LightweightCharts && LightweightCharts.CandlestickSeries) {
+          candleSeries = chart.addSeries(LightweightCharts.CandlestickSeries, candleOpts);
+          highLine = chart.addSeries(LightweightCharts.LineSeries, { color: "#06b6d4", lineWidth: 2, lineStyle: 2, title: "Target High Ĥ" });
+          lowLine = chart.addSeries(LightweightCharts.LineSeries, { color: "#ef4444", lineWidth: 2, lineStyle: 2, title: "Target Low L̂" });
+          closeLine = chart.addSeries(LightweightCharts.LineSeries, { color: "#3b82f6", lineWidth: 1, lineStyle: 3, title: "Pred Close Ĉ" });
+        }
 
-      window.addEventListener("resize", () => {
-        chart.resize(container.clientWidth, container.clientHeight);
-      });
+        window.addEventListener("resize", () => {
+          if (chart && container) chart.resize(container.clientWidth, container.clientHeight);
+        });
+      } catch (e) {
+        console.error("Chart initialization error:", e);
+      }
     }
 
-    // Populate Symbol Select Dropdown with all 65 Assets
+    // Populate Symbol Select Dropdown with all Assets
     async function loadUniverse() {
       try {
         const res = await fetch("/api/v1/market/scan?category=all");
@@ -629,26 +645,34 @@ HTML_TERMINAL = """<!DOCTYPE html>
         allPredictions = data.predictions || [];
 
         const sel = document.getElementById("symbol-select");
-        sel.innerHTML = "";
+        if (sel) {
+          sel.innerHTML = "";
 
-        // Group by Asset Class
-        const groups = { "INDEX": "Indices (18)", "EQUITY_FUTURE": "F&O Equities (32)", "COMMODITY": "MCX Commodities (9)", "CURRENCY_MACRO": "Currencies & Macro (6)" };
-        const grouped = {};
-        allPredictions.forEach(p => {
-          if (!grouped[p.asset_class]) grouped[p.asset_class] = [];
-          grouped[p.asset_class].push(p);
-        });
-
-        for (const [cls, list] of Object.entries(grouped)) {
-          const optGroup = document.createElement("optgroup");
-          optGroup.label = groups[cls] || cls;
-          list.forEach(p => {
-            const opt = document.createElement("option");
-            opt.value = p.symbol;
-            opt.textContent = `${p.symbol} - ${p.name}`;
-            optGroup.appendChild(opt);
+          // Group by Asset Class
+          const groups = {
+            "INDEX": "Indices (18)",
+            "EQUITY_FUTURE": "Indian Stocks & Futures (118)",
+            "COMMODITY": "MCX Commodities (9)",
+            "CURRENCY_MACRO": "Currencies & Macro (6)"
+          };
+          const grouped = {};
+          allPredictions.forEach(p => {
+            if (!grouped[p.asset_class]) grouped[p.asset_class] = [];
+            grouped[p.asset_class].push(p);
           });
-          sel.appendChild(optGroup);
+
+          for (const [cls, list] of Object.entries(grouped)) {
+            const optGroup = document.createElement("optgroup");
+            optGroup.label = groups[cls] || cls;
+            list.forEach(p => {
+              const opt = document.createElement("option");
+              opt.value = p.symbol;
+              opt.textContent = `${p.symbol} - ${p.name}`;
+              if (p.symbol === activeSymbol) opt.selected = true;
+              optGroup.appendChild(opt);
+            });
+            sel.appendChild(optGroup);
+          }
         }
 
         renderScreenerTable(allPredictions);
@@ -758,6 +782,15 @@ HTML_TERMINAL = """<!DOCTYPE html>
 
     // Run Live Market Scan
     async function runMarketScan(cat = activeCategory) {
+      const scanBtn = document.getElementById("scan-btn");
+      if (scanBtn) scanBtn.textContent = "⏳ SCANNING " + (cat === 'all' ? '150+' : cat.toUpperCase()) + "...";
+      const tbody = document.getElementById("screener-body");
+      if (tbody) {
+        tbody.innerHTML = `<tr><td colspan="12" style="text-align: center; color: var(--accent-cyan); padding: 28px; font-family: 'JetBrains Mono', monospace;">
+          <div style="font-size: 1.05rem; font-weight: 600; margin-bottom: 6px;">⚡ Running institutional scan for ${cat.toUpperCase()}...</div>
+          <div style="color: var(--text-muted); font-size: 0.8rem;">Evaluating directional probability P(Up), target High/Low bounds, and risk/reward</div>
+        </td></tr>`;
+      }
       try {
         const res = await fetch(`/api/v1/market/scan?category=${cat}`);
         const data = await res.json();
@@ -766,6 +799,11 @@ HTML_TERMINAL = """<!DOCTYPE html>
         loadBreadth();
       } catch (e) {
         console.error("Scan error:", e);
+        if (tbody) {
+          tbody.innerHTML = `<tr><td colspan="12" style="text-align: center; color: var(--accent-red); padding: 20px;">Scan failed: ${e.message || e}. Please retry.</td></tr>`;
+        }
+      } finally {
+        if (scanBtn) scanBtn.textContent = "⚡ SCAN ENTIRE MARKET";
       }
     }
 
@@ -893,10 +931,10 @@ HTML_TERMINAL = """<!DOCTYPE html>
     updateClock();
 
     // Init
-    window.addEventListener("DOMContentLoaded", () => {
-      initChart();
-      loadUniverse();
-      loadPortfolio();
+    window.addEventListener("DOMContentLoaded", async () => {
+      try { initChart(); } catch (e) { console.error("initChart error:", e); }
+      try { await loadUniverse(); } catch (e) { console.error("loadUniverse error:", e); }
+      try { loadPortfolio(); } catch (e) { console.error("loadPortfolio error:", e); }
     });
   </script>
 </body>
