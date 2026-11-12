@@ -683,6 +683,23 @@ HTML_TERMINAL = """<!DOCTYPE html>
       }
     }
 
+    // Helper to compute next business day in YYYY-MM-DD
+    function getNextTradingDay(dateStr) {
+      try {
+        const parts = String(dateStr).slice(0, 10).split("-");
+        const d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+        d.setDate(d.getDate() + 1);
+        if (d.getDay() === 6) d.setDate(d.getDate() + 2); // Saturday -> Monday
+        if (d.getDay() === 0) d.setDate(d.getDate() + 1); // Sunday -> Monday
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, "0");
+        const day = String(d.getDate()).padStart(2, "0");
+        return `${y}-${m}-${day}`;
+      } catch (e) {
+        return dateStr;
+      }
+    }
+
     // Load Candlestick & Forecast Data
     async function loadChartData(symbol) {
       try {
@@ -690,7 +707,9 @@ HTML_TERMINAL = """<!DOCTYPE html>
         const data = await res.json();
 
         if (data.candles && data.candles.length > 0) {
-          candleSeries.setData(data.candles);
+          if (candleSeries) {
+            candleSeries.setData(data.candles);
+          }
 
           // Update KPIs
           const f = data.forecast;
@@ -715,26 +734,65 @@ HTML_TERMINAL = """<!DOCTYPE html>
           document.getElementById("order-symbol").value = symbol;
           document.getElementById("order-price").value = f.current_price.toFixed(2);
 
-          // Forecast Cone overlays
-          const lastTime = lastCandle.time;
-          highLine.setData([
-            { time: lastTime, value: f.current_price },
-            { time: lastTime, value: f.predicted_high }
-          ]);
-          lowLine.setData([
-            { time: lastTime, value: f.current_price },
-            { time: lastTime, value: f.predicted_low }
-          ]);
-          closeLine.setData([
-            { time: lastTime, value: f.current_price },
-            { time: lastTime, value: f.predicted_close }
-          ]);
+          // Forecast Cone overlays with strictly ascending time points
+          if (highLine && lowLine && closeLine) {
+            try {
+              const lastTime = lastCandle.time;
+              const nextTime = getNextTradingDay(lastTime);
 
-          chart.timeScale().fitContent();
+              highLine.setData([
+                { time: lastTime, value: f.current_price },
+                { time: nextTime, value: f.predicted_high }
+              ]);
+              lowLine.setData([
+                { time: lastTime, value: f.current_price },
+                { time: nextTime, value: f.predicted_low }
+              ]);
+              closeLine.setData([
+                { time: lastTime, value: f.current_price },
+                { time: nextTime, value: f.predicted_close }
+              ]);
+            } catch (coneErr) {
+              console.warn("Forecast cone render notice:", coneErr);
+            }
+          }
+
+          if (chart && chart.timeScale) {
+            chart.timeScale().fitContent();
+          }
+
+          // Show Toast notification of analysis
+          showAnalysisToast(symbol, f);
         }
       } catch (e) {
         console.error("Chart load error:", e);
       }
+    }
+
+    // Floating Analysis Toast
+    function showAnalysisToast(symbol, f) {
+      let toast = document.getElementById("analysis-toast");
+      if (!toast) {
+        toast = document.createElement("div");
+        toast.id = "analysis-toast";
+        toast.style.cssText = "position: fixed; bottom: 24px; right: 24px; z-index: 99999; background: #0f172a; border: 1px solid #06b6d4; padding: 14px 20px; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); font-family: 'JetBrains Mono', monospace; max-width: 440px;";
+        document.body.appendChild(toast);
+      }
+      toast.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+          <strong style="color: #06b6d4; font-size: 0.9rem;">🎯 ${symbol} PREDICTION READY</strong>
+          <span class="signal-badge ${f.signal.includes('BUY') ? 'sig-strong-buy' : (f.signal.includes('SELL') ? 'sig-strong-sell' : 'sig-neutral')}">${f.signal}</span>
+        </div>
+        <div style="font-size: 0.78rem; color: #cbd5e1; line-height: 1.5;">
+          Spot: <strong>₹${f.current_price.toFixed(2)}</strong> | P(Up): <strong style="color:#10b981">${(f.prob_win*100).toFixed(1)}%</strong><br>
+          Target High: <strong style="color:#06b6d4">₹${f.predicted_high.toFixed(2)}</strong> | Target Low: <strong style="color:#ef4444">₹${f.predicted_low.toFixed(2)}</strong>
+        </div>
+        <div style="margin-top: 10px; display: flex; gap: 8px;">
+          <button class="btn-action" style="padding: 4px 10px; font-size: 0.72rem;" onclick="window.scrollTo({ top: 0, behavior: 'smooth' })">📈 View Chart ↗</button>
+          <button class="btn-action" style="padding: 4px 10px; font-size: 0.72rem; background: #334155;" onclick="this.parentElement.parentElement.style.display='none'">Dismiss</button>
+        </div>
+      `;
+      toast.style.display = "block";
     }
 
     // Lookup ANY Indian Stock (2000+ NSE/BSE)
@@ -748,26 +806,39 @@ HTML_TERMINAL = """<!DOCTYPE html>
       selectAsset(sym);
     }
 
-    // Select Asset with Dynamic Auto-Addition
+    // Select Asset with Dynamic Auto-Addition & Smooth Scroll
     function selectAsset(sym) {
       activeSymbol = sym;
       const sel = document.getElementById("symbol-select");
-      let found = false;
-      for (let i = 0; i < sel.options.length; i++) {
-        if (sel.options[i].value === sym) {
-          sel.selectedIndex = i;
-          found = true;
-          break;
+      if (sel) {
+        let found = false;
+        for (let i = 0; i < sel.options.length; i++) {
+          if (sel.options[i].value === sym) {
+            sel.selectedIndex = i;
+            found = true;
+            break;
+          }
+        }
+        if (!found) {
+          const opt = document.createElement("option");
+          opt.value = sym;
+          opt.textContent = `${sym} (Dynamic Stock)`;
+          opt.selected = true;
+          sel.prepend(opt);
+          sel.selectedIndex = 0;
         }
       }
-      if (!found) {
-        const opt = document.createElement("option");
-        opt.value = sym;
-        opt.textContent = `${sym} (Dynamic Stock)`;
-        opt.selected = true;
-        sel.prepend(opt);
-        sel.selectedIndex = 0;
-      }
+
+      // Highlight active row in screener table
+      try {
+        document.querySelectorAll("#screener-body tr").forEach(r => r.style.background = "");
+        const activeRow = document.getElementById(`row-${sym.replace(/\\s+/g, '_')}`);
+        if (activeRow) activeRow.style.background = "rgba(6, 182, 212, 0.15)";
+      } catch (hErr) {}
+
+      // Smooth scroll directly to the top TradingView chart so prediction is immediately visible
+      window.scrollTo({ top: 0, behavior: "smooth" });
+
       loadChartData(sym);
     }
 
@@ -815,6 +886,7 @@ HTML_TERMINAL = """<!DOCTYPE html>
 
       list.forEach(p => {
         const tr = document.createElement("tr");
+        tr.id = `row-${p.symbol.replace(/\\s+/g, '_')}`;
 
         let sigClass = "sig-neutral";
         if (p.signal === "STRONG BUY") sigClass = "sig-strong-buy";
@@ -837,7 +909,7 @@ HTML_TERMINAL = """<!DOCTYPE html>
           <td class="text-red">₹${p.predicted_low.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
           <td><strong>${p.risk_reward_ratio}:1</strong></td>
           <td style="font-size: 0.72rem; color: var(--text-muted);">${p.regime_label}</td>
-          <td><button class="btn-action" style="padding: 3px 8px; font-size: 0.7rem;" onclick="selectAsset('${p.symbol}')">ANALYZE</button></td>
+          <td><button class="btn-action" style="padding: 5px 12px; font-size: 0.74rem; background: linear-gradient(135deg, #0284c7, #06b6d4); font-weight: 700; border-radius: 4px; box-shadow: 0 2px 8px rgba(6, 182, 212, 0.3);" onclick="selectAsset('${p.symbol}')">ANALYZE ↗</button></td>
         `;
         tbody.appendChild(tr);
       });
