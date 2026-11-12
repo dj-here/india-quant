@@ -18,16 +18,39 @@ for path in [str(PROJECT_ROOT), str(SRC_DIR)]:
         sys.path.insert(0, path)
 
 try:
-    from india_quant.serving.app import app
+    from india_quant.serving.app import app, serve_web_terminal
+
+    # Add explicit route aliases for /api/index in case of direct rewrite hit
+    @app.get("/api/index", include_in_schema=False)
+    @app.get("/api/index/", include_in_schema=False)
+    def vercel_root_alias():
+        return serve_web_terminal()
+
 except Exception as e:
+    err_trace = traceback.format_exc()
+    print(f"CRITICAL: IndiaQuant Serverless Initialization Error:\n{err_trace}", file=sys.stderr, flush=True)
+
     from fastapi import FastAPI
     from fastapi.responses import HTMLResponse
-    err_trace = traceback.format_exc()
+
     app = FastAPI(title="IndiaQuant Emergency Fallback")
 
-    @app.get("/{full_path:path}", response_class=HTMLResponse)
-    def handle_error(full_path: str = ""):
-        return HTMLResponse(
-            f"<h2>IndiaQuant Serverless Initialization Error</h2><pre>{err_trace}</pre>",
-            status_code=500,
-        )
+    error_html = (
+        "<!DOCTYPE html>"
+        "<html><head><title>IndiaQuant - Deployment Error</title>"
+        "<style>body{font-family:sans-serif;background:#0d1117;color:#c9d1d9;padding:40px;line-height:1.6}"
+        "h1{color:#f85149}pre{background:#161b22;padding:20px;border-radius:8px;overflow-x:auto;color:#79c0ff;font-size:14px;border:1px solid #30363d}"
+        "</style></head><body>"
+        "<h1>IndiaQuant Serverless Initialization Error</h1>"
+        "<p>The application encountered an unhandled exception during serverless cold start:</p>"
+        f"<pre>{err_trace}</pre>"
+        "</body></html>"
+    )
+
+    @app.get("/", response_class=HTMLResponse)
+    def root_error():
+        return HTMLResponse(content=error_html, status_code=500)
+
+    @app.api_route("/{full_path:path}", methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"], response_class=HTMLResponse)
+    def catch_all_error(full_path: str = ""):
+        return HTMLResponse(content=error_html, status_code=500)

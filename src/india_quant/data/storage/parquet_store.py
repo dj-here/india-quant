@@ -12,8 +12,14 @@ from pathlib import Path
 import tempfile
 from typing import Dict, List, Optional
 import pandas as pd
-import pyarrow as pa
-import pyarrow.parquet as pq
+try:
+    import pyarrow as pa
+    import pyarrow.parquet as pq
+    HAS_PYARROW = True
+except ImportError:
+    pa = None
+    pq = None
+    HAS_PYARROW = False
 import pytz
 
 IST = pytz.timezone("Asia/Kolkata")
@@ -139,8 +145,11 @@ class ParquetDataStore:
         # Deduplicate while preserving order
         read_cols = list(dict.fromkeys(read_cols))
 
-        table = pq.read_table(target_file, columns=read_cols)
-        df = table.to_pandas()
+        if HAS_PYARROW and pq is not None:
+            table = pq.read_table(target_file, columns=read_cols)
+            df = table.to_pandas()
+        else:
+            df = pd.read_parquet(target_file, columns=read_cols)
 
         df["timestamp"] = pd.to_datetime(df["timestamp"])
         if df["timestamp"].dt.tz is None:
